@@ -43,7 +43,7 @@ if __name__ == "__main__":
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
     print(c.describe_account())
-    year = "2017"
+    year = "2019"
     TIMERANGE = [f"{year}-01-01", f"{year}-12-31"]
     assert len(FEATURES_VAL) > 0, "No geoson file found"
     features = FEATURES_VAL[0]
@@ -55,11 +55,9 @@ if __name__ == "__main__":
             print(feat)
             features = json.load(feat)
     print(features)
-    output_s2 = download_s2(c,
-                            features=features,
-                            tile=tile,
-                            temporal_extent=TIMERANGE,
-                            year=year)
+    output_s2 = download_s2(
+        c, features=features, tile=tile, temporal_extent=TIMERANGE, year=year
+    )
     job_s1_asc = download_s1(
         c,
         collection_s2=output_s2.collection,
@@ -67,6 +65,7 @@ if __name__ == "__main__":
         features=features,
         tile=tile,
         temporal_extent=TIMERANGE,
+        year=year,
     )
     job_s1_des = download_s1(
         c,
@@ -75,6 +74,7 @@ if __name__ == "__main__":
         features=features,
         tile=tile,
         temporal_extent=TIMERANGE,
+        year=year,
     )
     job_agora = download_agora(
         c,
@@ -82,12 +82,22 @@ if __name__ == "__main__":
         features=features,
         tile=tile,
         temporal_extent=TIMERANGE,
+        year=year,
     )
-    job_dem = download_dem(c,
-                           collection_s2=output_s2.collection,
-                           features=features,
-                           tile=tile)
+    job_dem = download_dem(
+        c,
+        collection_s2=output_s2.collection,
+        features=features,
+        tile=tile,
+        year=year,
+    )
     pull_and_download(
-        [output_s2, job_s1_asc, job_s1_des, job_agora, job_dem],
-        download=True)  # job_s1_asc, job_s1_des, job_agora, job_dem #output_s2
+        [
+            output_s2,
+            job_s1_asc,
+            job_s1_des,
+            job_agora,
+        ],  # job_s1_asc, job_s1_des, job_agora, job_dem
+        download=True,
+    )  # job_s1_asc, job_s1_des, job_agora, job_dem #output_s2
     # poll_and_download([job_s2, job_s1, job_dem, job_agera5])

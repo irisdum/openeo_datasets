@@ -51,12 +51,12 @@ def download_s2(
     if temporal_extent is None:
         temporal_extent = TIMERANGE
     print(temporal_extent)
-    sentinel2 = connection.load_collection(S2_COLLECTION,
-                                           temporal_extent=temporal_extent,
-                                           bands=S2_BANDS)
+    sentinel2 = connection.load_collection(
+        S2_COLLECTION, temporal_extent=temporal_extent, bands=S2_BANDS
+    )
     return run_job(
         datacube=sentinel2,
-        title=f"Sentinel2_{tile}",
+        title=f"Sentinel2_{tile}_{year}",
         description=f"Sentinel-2 {tile} L2A bands {year}",
         subdir=sub_dir_name("S2", tile, year),
         features=features,
@@ -92,8 +92,9 @@ def download_s1(
     )
 
     if collection_s2 is not None:
-        sentinel1 = sentinel1.resample_cube_spatial(collection_s2,
-                                                    method="cubic")
+        sentinel1 = sentinel1.resample_cube_spatial(
+            collection_s2, method="cubic"
+        )
     return run_job(
         datacube=sentinel1,
         title=f"Sentinel1_{orbit}_{tile}",
@@ -131,18 +132,16 @@ def download_agora(
         agera5 = agera5.resample_cube_spatial(collection_s2, method="cubic")
     return run_job(
         datacube=agera5,
-        title=f"AGERA5_{tile}",
+        title=f"AGERA5_{tile}_{year}",
         description=f"AGERA-5{tile} {year}",
         subdir=sub_dir_name("AGERA5", tile, year),
         features=features,
     )
 
 
-def download_dem(connection,
-                 collection_s2=None,
-                 features=FEATURES_VAL,
-                 tile=None,
-                 year=None) -> OutRunJob:
+def download_dem(
+    connection, collection_s2=None, features=FEATURES_VAL, tile=None, year=None
+) -> OutRunJob:
     dem = connection.load_collection(
         "COPERNICUS_30",
         bands=["DEM"],
@@ -152,18 +151,19 @@ def download_dem(connection,
     return run_job(
         dem,
         title=f"DEM{tile}",
-        description=f"DEM_{tile}_{year}",
-        subdir=sub_dir_name("DEM", tile, year),
+        description=f"DEM_{tile}",
+        subdir=sub_dir_name("DEM", tile, None),
         features=features,
     )
 
 
-def sub_dir_name(suffix: str,
-                 tile: str | None = None,
-                 year: str | None = None):
-    path_subdir = suffix
+def sub_dir_name(
+    suffix: str, tile: str | None = None, year: str | None = None
+):
+    path_subdir = ""
     if tile is not None:
-        path_subdir += "/" + tile
+        path_subdir += tile + "/"
         if year is not None:
-            path_subdir += "/" + year
+            path_subdir += year + "/"
+    path_subdir += suffix
     return path_subdir

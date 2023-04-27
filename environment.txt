@@ -1,0 +1,15 @@
+omegaconf
+matplotlib
+scipy
+shapely
+xarray
+pandas
+geopandas
+ipykernel
+hydra-core
+einops
+ruamel.yaml
+flake8
+pytest
+wget
+openeo
