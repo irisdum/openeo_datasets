@@ -12,7 +12,7 @@ from openeo_mmdc.build_datacube import (
     download_s1,
     download_s2,
 )
-from openeo_mmdc.constant.dataset import FEATURES
+from openeo_mmdc.constant.dataset import FEATURES_VAL
 
 
 @dataclass
@@ -26,8 +26,6 @@ def pull_and_download(jobs: list[OutRunJob], download: bool = False):
     jobs = jobs.copy()
     while jobs:
         for job in jobs:
-            print(job)
-            print(type(job))
             job_id = job.job
             out_dir = job.outdir
             if job_id.status() == "finished":
@@ -43,21 +41,50 @@ def pull_and_download(jobs: list[OutRunJob], download: bool = False):
 if __name__ == "__main__":
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
-    if FEATURES.endswith("json") and FEATURES.startswith("/"):
-        with open(FEATURES) as feat:
-            FEATURES = json.load(feat)
-    print(FEATURES)
-    output_s2 = download_s2(c)
+    year = "2017"
+    TIMERANGE = [f"{year}-01-01", f"{year}-12-31"]
+    assert len(FEATURES_VAL) > 0, "No geoson file found"
+    features = FEATURES_VAL[0]
+    tile = features.name.split("_")[-1].split(".")[0]
+    features = str(features)
+    if features.endswith("json") and features.startswith("/"):
+        with open(features) as feat:
+            print(feat)
+            features = json.load(feat)
+    print(features)
+    output_s2 = download_s2(
+        c, features=features, tile=tile, temporal_extent=TIMERANGE, year=year
+    )
     job_s1_asc = download_s1(
-        c, collection_s2=output_s2.collection, orbit="ASCENDING"
+        c,
+        collection_s2=output_s2.collection,
+        orbit="ASCENDING",
+        features=features,
+        tile=tile,
+        temporal_extent=TIMERANGE,
     )
     job_s1_des = download_s1(
-        c, collection_s2=output_s2.collection, orbit="DESCENDING"
+        c,
+        collection_s2=output_s2.collection,
+        orbit="DESCENDING",
+        features=features,
+        tile=tile,
+        temporal_extent=TIMERANGE,
     )
-    job_agora = download_agora(c, collection_s2=output_s2.collection)
-    job_dem = download_dem(c, collection_s2=output_s2.collection)
+    job_agora = download_agora(
+        c,
+        collection_s2=output_s2.collection,
+        features=features,
+        tile=tile,
+        temporal_extent=TIMERANGE,
+    )
+    job_dem = download_dem(
+        c, collection_s2=output_s2.collection, features=features, tile=tile
+    )
     # job_s1 = sample_and_download_s1(c)
     # job_dem = sample_and_download_dem(c)
     # job_agera5 = sample_and_download_agera5(c)
-    pull_and_download([output_s2, job_s1_asc, job_s1_des, job_agora, job_dem])
+    pull_and_download(
+        [job_s1_asc, job_s1_des, job_agora, job_dem], download=False
+    )  # job_s1_asc, job_s1_des, job_agora, job_dem #output_s2
     # poll_and_download([job_s2, job_s1, job_dem, job_agera5])

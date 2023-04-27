@@ -25,9 +25,11 @@ extend-exclude = '''
 # this off.
 preview = true
 
-
 [tool.isort]
 profile = "black"
+line_length=79
+wrap_length=79
+
 
 [tool.flake8] #not sure iyt is workins as supposed to
 extend_ignore = ['F841','E303','E501']

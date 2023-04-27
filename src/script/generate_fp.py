@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import geopandas
@@ -5,7 +6,11 @@ import numpy as np
 import pandas as pd
 import shapely
 
-from openeo_mmdc.constant.dataset import L_TILES, S2_TILES_SHP
+from openeo_mmdc.constant.dataset import (
+    L_TRAIN_TILES,
+    L_VAL_TILES,
+    S2_TILES_SHP,
+)
 
 SEED = 4
 
@@ -23,7 +28,7 @@ def open_s2_fp(l_tile_name: list | None, file_path: str = S2_TILES_SHP):
     assert Path(file_path).exists(), f"No file found at {file_path}"
     df = geopandas.read_file(file_path)
     if l_tile_name is None:
-        l_tile_name = L_TILES
+        l_tile_name = L_TRAIN_TILES
     df["cond"] = df.apply(lambda x: x.Name in l_tile_name, axis=1)
     sub_df = df[df["cond"]]
     assert len(sub_df) == len(
@@ -59,8 +64,6 @@ def sample_random_bbox(
     assert box_size % 2 == 0, "Box size whould be divided by 2 {}".format(
         box_size
     )
-    print(box_size)
-    np.random.seed(SEED)
     points = geopandas.points_from_xy(
         np.random.uniform(
             polygon_geom.bounds[0] + box_size / 2,
@@ -120,6 +123,7 @@ def one_tile_bbox(
     selected on the tile indictaed by tile_name
     """
     tile_df = df[df["Name"] == tile_name]
+    assert len(tile_df) > 0, f"No tile found ad {tile_name}"
     utm_crs = tile_df.estimate_utm_crs()
     utm_tile_df = tile_df.to_crs(utm_crs)
     bbox_df = sample_random_bbox(
@@ -133,12 +137,38 @@ def one_tile_bbox(
     return bbox_df
 
 
+@dataclass
+class InputFP:
+    dataset_type: str
+    list_tile: list
+    num_boxes: int
+    box_size: int
+
+
 if __name__ == "__main__":
-    df = open_s2_fp(l_tile_name=None)
+    train_input_fp = InputFP(
+        "train", list_tile=L_TRAIN_TILES, num_boxes=10, box_size=5120
+    )
+    val_input_fp = InputFP(
+        "val", list_tile=L_VAL_TILES, num_boxes=30, box_size=1280
+    )
+    input_fp = val_input_fp
+    list_tile = input_fp.list_tile
+    df = open_s2_fp(l_tile_name=list_tile)
     print("orginal", df.crs)
-    print(L_TILES[0])
+    # print(L_TILES[0])
+    print(len(df))
     l_bbox_df = []
-    for tile in L_TILES:
-        l_bbox_df += [one_tile_bbox(tile_name=tile, df=df, num_boxes=20)]
-    bbox_df = pd.concat(l_bbox_df)
-    bbox_df.to_file("/home/dumeuri/Documents/dataset/pretrain_train.geojson")
+    for tile in list_tile:
+        l_bbox_df = [
+            one_tile_bbox(
+                tile_name=tile,
+                df=df,
+                num_boxes=input_fp.num_boxes,
+                box_size=input_fp.box_size,
+            )
+        ]
+        bbox_df = pd.concat(l_bbox_df)
+        bbox_df.to_file(
+            f"/home/dumeuri/Documents/dataset/pretrain_{input_fp.dataset_type}_{tile}.geojson"
+        )

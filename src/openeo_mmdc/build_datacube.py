@@ -4,7 +4,7 @@ from pathlib import Path
 from openeo import BatchJob, DataCube
 
 from openeo_mmdc.constant.dataset import (
-    FEATURES,
+    FEATURES_VAL,
     OUTDIR,
     S2_BANDS,
     S2_COLLECTION,
@@ -20,13 +20,15 @@ class OutRunJob:
 
 
 def run_job(
-    datacube: DataCube, title: str, description: str, subdir: str
+    datacube: DataCube,
+    title: str,
+    description: str,
+    subdir: str,
+    features,
 ) -> OutRunJob:
     out_dir = OUTDIR / subdir
     print(type(datacube))
-    job = datacube.filter_spatial(
-        FEATURES,
-    ).create_job(
+    job = datacube.filter_spatial(features).create_job(
         title=title,
         description=description,
         out_format="netCDF",
@@ -39,21 +41,25 @@ def run_job(
 
 
 def download_s2(
-    connection, temporal_extent: list | None = None, max_cc=50
+    connection,
+    temporal_extent: list | None = None,
+    max_cc=50,
+    year=None,
+    features=FEATURES_VAL,
+    tile=None,
 ) -> OutRunJob:
     if temporal_extent is None:
         temporal_extent = TIMERANGE
+    print(temporal_extent)
     sentinel2 = connection.load_collection(
-        S2_COLLECTION,
-        temporal_extent=temporal_extent,
-        bands=S2_BANDS,
-        max_cloud_cover=max_cc,
+        S2_COLLECTION, temporal_extent=temporal_extent, bands=S2_BANDS
     )
     return run_job(
         datacube=sentinel2,
-        title="Sentinel2",
-        description="Sentinel-2 L2A bands",
-        subdir="S2",
+        title=f"Sentinel2_{tile}",
+        description="Sentinel-2 {tile} L2A bands",
+        subdir=sub_dir_name("S2", tile, year),
+        features=features,
     )
 
 
@@ -62,6 +68,9 @@ def download_s1(
     temporal_extent: list | None = None,
     collection_s2=None,
     orbit="ASCENDING",
+    features=FEATURES_VAL,
+    tile=None,
+    year=None,
 ) -> OutRunJob:
     properties = {"sat:orbit_state": lambda od: od == orbit}
     if temporal_extent is None:
@@ -88,14 +97,20 @@ def download_s1(
         )
     return run_job(
         datacube=sentinel1,
-        title=f"Sentinel1_{orbit}",
-        description=f"Sentinel-1 VV, VH, orbit {orbit}",
-        subdir=f"S1_{orbit}",
+        title=f"Sentinel1_{orbit}_{tile}",
+        description=f"Sentinel-1 VV, VH, orbit {orbit} {tile}",
+        subdir=sub_dir_name(f"S1_{orbit}", tile, year),
+        features=features,
     )
 
 
 def download_agora(
-    connection, temporal_extent: list | None = None, collection_s2=None
+    connection,
+    temporal_extent: list | None = None,
+    collection_s2=None,
+    features=FEATURES_VAL,
+    tile=None,
+    year=None,
 ) -> OutRunJob:
     if temporal_extent is None:
         temporal_extent = TIMERANGE
@@ -117,17 +132,37 @@ def download_agora(
         agera5 = agera5.resample_cube_spatial(collection_s2, method="cubic")
     return run_job(
         datacube=agera5,
-        title="AGERA5",
-        description="AGERA-5",
-        subdir="AGERA5",
+        title=f"AGERA5_{tile}",
+        description=f"AGERA-5{tile}",
+        subdir=sub_dir_name("AGERA5", tile, year),
+        features=features,
     )
 
 
-def download_dem(connection, collection_s2=None) -> OutRunJob:
+def download_dem(
+    connection, collection_s2=None, features=FEATURES_VAL, tile=None, year=None
+) -> OutRunJob:
     dem = connection.load_collection(
         "COPERNICUS_30",
         bands=["DEM"],
     )
     if collection_s2 is not None:
         dem = dem.resample_cube_spatial(collection_s2, method="cubic")
-    return run_job(dem, title="DEM", description="DEM", subdir="DEM")
+    return run_job(
+        dem,
+        title=f"DEM{tile}",
+        description=f"DEM_{tile}",
+        subdir=sub_dir_name("DEM", tile, year),
+        features=features,
+    )
+
+
+def sub_dir_name(
+    suffix: str, tile: str | None = None, year: str | None = None
+):
+    path_subdir = suffix
+    if tile is not None:
+        path_subdir += "/" + tile
+        if year is not None:
+            path_subdir += "/" + year
+    return path_subdir
