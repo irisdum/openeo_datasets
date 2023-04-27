@@ -47,17 +47,16 @@ L_VAL_TILES = [
     "34UDB",
 ]  # ["30TXT","30TYQ","30TYS","30UVU","31TBG","31TDJ","31TDL","31TFN","31TGJ","31UEP"]
 TIMERANGE = ["2017-01-01", "2017-12-31"]
-OUTDIR = Path("/home/dumeuri/Documents/dataset/MMDC_OE")
 
-FEATURES_VAL = "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
-FEATURES_TRAIN = (
-    "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
-)
+OUTDIR = Path("/home/ad/dumeuri/DeepChange/MMDC_OE/val")
+
+FEATURES_TRAIN = sorted(
+    Path("/home/ad/dumeuri/code/openeo_datasets/geojson").rglob(
+        pattern="pretrain_train*.geojson"))
 FEATURES_VAL = sorted(
-    Path("/home/dumeuri/Documents/dataset/datacubes/geojson").rglob(
-        pattern="pretrain_val*.geojson"
-    )
-)
+    Path("/home/ad/dumeuri/code/openeo_datasets/geojson").rglob(
+        pattern="pretrain_val*.geojson"))
+
 D_AGERA5_BAND_NAME = dict(
     zip(
         [
@@ -80,5 +79,4 @@ D_AGERA5_BAND_NAME = dict(
             "VAP_PRESS",
             "WIND_SPEED",
         ],
-    )
-)
+    ))
