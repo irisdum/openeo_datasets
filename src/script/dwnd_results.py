@@ -3,7 +3,7 @@ import openeo
 if __name__ == "__main__":
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
-    res = c.job("vito-j-a970d643986c4f0e988a67474c9c3e13").get_results()
+    res = c.job("vito-j-e9178da12c0b4c9f8a586e071e871aa2").get_results()
     res.download_files(
-        "/home/dumeuri/Documents/dataset/datacubes/multimodal/s1_des"
+        "/home/dumeuri/Documents/dataset/MMDC_OE/30TYR/2019/S1_ASCENDING"
     )

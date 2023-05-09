@@ -29,7 +29,7 @@ echo "create blakc env "
 # Enter virtualenv
 conda deactivate
 conda activate $target
-
+conda install -c conda-forge curl
 which python
 python --version
 

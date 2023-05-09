@@ -8,7 +8,7 @@ from openeo import BatchJob, DataCube
 
 from openeo_mmdc.build_datacube import (
     OutRunJob,
-    download_agora,
+    download_agora_per_band,
     download_dem,
     download_s1,
     download_s2,
@@ -43,10 +43,10 @@ if __name__ == "__main__":
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
     print(c.describe_account())
-    year = "2019"
+    year = "2020"
     TIMERANGE = [f"{year}-01-01", f"{year}-12-31"]
     assert len(FEATURES_VAL) > 0, "No geoson file found"
-    features = FEATURES_VAL[0]
+    features = FEATURES_VAL[1]
     tile = features.name.split("_")[-1].split(".")[0]
     features = str(features)
     print(Path.cwd())
@@ -56,7 +56,12 @@ if __name__ == "__main__":
             features = json.load(feat)
     print(features)
     output_s2 = download_s2(
-        c, features=features, tile=tile, temporal_extent=TIMERANGE, year=year
+        c,
+        features=features,
+        tile=tile,
+        temporal_extent=TIMERANGE,
+        year=year,
+        run=False,
     )
     job_s1_asc = download_s1(
         c,
@@ -76,14 +81,26 @@ if __name__ == "__main__":
         temporal_extent=TIMERANGE,
         year=year,
     )
-    job_agora = download_agora(
-        c,
-        collection_s2=output_s2.collection,
-        features=features,
-        tile=tile,
-        temporal_extent=TIMERANGE,
-        year=year,
-    )
+    agera5_bands = [
+        "dewpoint-temperature",
+        "precipitation-flux",
+        "solar-radiation-flux",
+        "temperature-max",
+        "temperature-mean",
+        "temperature-min",
+        "vapour-pressure",
+        "wind-speed",
+    ]
+    for b in agera5_bands:
+        job_agora = download_agora_per_band(
+            c,
+            collection_s2=output_s2.collection,
+            features=features,
+            tile=tile,
+            temporal_extent=TIMERANGE,
+            year=year,
+            bands=[b],
+        )
     job_dem = download_dem(
         c,
         collection_s2=output_s2.collection,
@@ -92,12 +109,7 @@ if __name__ == "__main__":
         year=year,
     )
     pull_and_download(
-        [
-            output_s2,
-            job_s1_asc,
-            job_s1_des,
-            job_agora,
-        ],  # job_s1_asc, job_s1_des, job_agora, job_dem
-        download=True,
-    )  # job_s1_asc, job_s1_des, job_agora, job_dem #output_s2
+        [job_agora],
+        download=False,
+    )  # job_s1_asc, job_s1_des, job_agora, job_dem #job_s1_asc, job_s1_des, job_dem
     # poll_and_download([job_s2, job_s1, job_dem, job_agera5])

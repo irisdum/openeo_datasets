@@ -37,7 +37,7 @@ conda create --yes --prefix $target python==${python_version} pip
 # Enter virtualenv
 conda deactivate
 conda activate $target
-
+conda install -c conda-forge curl
 which python
 python --version
 
@@ -49,7 +49,7 @@ pip install -r environment.txt
 module unload git
 python -m pip install "dask[distributed]" --upgrade
 pip install 'python-lsp-server[all]'
-python -m ipykernel install --user --name $export_name
+python -m ipykernel install --user --name "$name"
 pip install tabulate
 
 # End

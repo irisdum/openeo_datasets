@@ -47,7 +47,7 @@ L_VAL_TILES = [
     "34UDB",
 ]  # ["30TXT","30TYQ","30TYS","30UVU","31TBG","31TDJ","31TDL","31TFN","31TGJ","31UEP"]
 TIMERANGE = ["2017-01-01", "2017-12-31"]
-OUTDIR = Path("/home/ad/dumeuri/DeepChange/MMDC_OE")
+OUTDIR = Path("/home/dumeuri/Documents/dataset/MMDC_OE")
 
 FEATURES_VAL = "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
 FEATURES_TRAIN = (
@@ -56,5 +56,29 @@ FEATURES_TRAIN = (
 FEATURES_VAL = sorted(
     Path("/home/dumeuri/Documents/dataset/datacubes/geojson").rglob(
         pattern="pretrain_val*.geojson"
+    )
+)
+D_AGERA5_BAND_NAME = dict(
+    zip(
+        [
+            "dewpoint-temperature",
+            "precipitation-flux",
+            "solar-radiation-flux",
+            "temperature-max",
+            "temperature-mean",
+            "temperature-min",
+            "vapour-pressure",
+            "wind-speed",
+        ],
+        [
+            "DEW_TEMP",
+            "PREC",
+            "SOL_RAD",
+            "TEMP_MAX",
+            "TEMP_MEAN",
+            "TEMP_MIN",
+            "VAP_PRESS",
+            "WIND_SPEED",
+        ],
     )
 )
