@@ -1,9 +1,25 @@
 import openeo
 
+
+def extract_year(dict_metadata: dict):
+    pass
+
+
+def extract_tile(dict_metadat: dict):
+    pass
+
+
 if __name__ == "__main__":
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
-    res = c.job("vito-j-e9178da12c0b4c9f8a586e071e871aa2").get_results()
-    res.download_files(
-        "/home/dumeuri/Documents/dataset/MMDC_OE/30TYR/2019/S1_ASCENDING"
+    job = c.job("vito-j-dbdccbcd427344c28b9842d5b38b2c3b")
+
+    res = job.get_results()
+    dict_metadata = res.get_metadata()
+
+    print(
+        res.get_metadata()["properties"]["card4l:processing_chain"][
+            "process_graph"
+        ]["loadcollection1"]["arguments"]["temporal_extent"]
     )
+    res.download_files("/home/ad/dumeuri/DeepChange/MMDC_OE/val/30TYR/2017/S2")

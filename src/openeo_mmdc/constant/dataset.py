@@ -50,8 +50,13 @@ TIMERANGE = ["2017-01-01", "2017-12-31"]
 OUTDIR = Path("/home/dumeuri/Documents/dataset/MMDC_OE")
 
 # FEATURES_VAL = "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
-FEATURES_TRAIN = (
-    "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
+
+OUTDIR = Path("/home/ad/dumeuri/DeepChange/MMDC_OE/val")
+
+FEATURES_TRAIN = sorted(
+    Path("/home/ad/dumeuri/code/openeo_datasets/geojson").rglob(
+        pattern="pretrain_train*.geojson"
+    )
 )
 FEATURES_VAL = sorted(
     Path("/home/dumeuri/Documents/dataset/datacubes/geojson").rglob(

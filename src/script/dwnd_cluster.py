@@ -1,12 +1,14 @@
 """
 Dwnd tiles in cluster
 """
+import getpass
 import os
 from pathlib import Path
 
 import dask
 import hydra
 import openeo
+import requests
 from dask.distributed import Client
 from omegaconf import DictConfig
 
@@ -38,13 +40,16 @@ def extracts2_tile(dict_metadata: dict):
     ]
 
 
-def dwnd_file(link, ex_dir):
+def dwnd_file(link, ex_dir, roi):
     print(link)
-    cmd = f"curl -O --output-dir {ex_dir} {link} "
+    # cmd = f"curl -k -O --output-dir {ex_dir} {link} "
     # os.system("curl -V")
     # p = subprocess.Popen(cmd,shell=True)
+    r = requests.get(link, allow_redirects=True)
 
-    os.system(cmd)
+    open(os.path.join(ex_dir, roi), "wb").write(r.content)
+    print(f"save {roi}")
+    #    os.system(cmd)
     # wget.download(url=link, out=ex_dir
     return link
 
@@ -60,6 +65,15 @@ def main(config: DictConfig, connection):
     Args:
     Returns:
     """
+    if config.where == "hal":
+        user = getpass.getuser()
+        pw = getpass.getpass()
+        os.environ["http_proxy"] = (
+            f"http://{user}:{pw}@proxy-surf.loc.cnes.fr:8050"
+        )
+        os.environ["https_proxy"] = (
+            f"http://{user}:{pw}@proxy-surf.loc.cnes.fr:8050"
+        )
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
     Client(threads_per_worker=4, n_workers=1)
@@ -88,10 +102,12 @@ def main(config: DictConfig, connection):
                     l_out += [
                         dask.delayed(
                             dwnd_file(
-                                assets_metadata[roi]["href"], ex_dir=out_dir
+                                assets_metadata[roi]["href"],
+                                ex_dir=out_dir,
+                                roi=roi,
                             )
                         )
-                    ]  # TODO not sure maybe change that ...
+                    ]
                 else:
                     print(f"file {roi} exists")
         except openeo.rest.OpenEoApiError:
