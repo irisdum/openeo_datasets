@@ -1,7 +1,13 @@
-# Installation
+# Setup
+
+## Local env
+`source build_conda_loc.sh`
+## Env on hal cluster
+`source build_conda_cluster.sh`
+### Package
+In this directory :
 `pip install -e . `
-`pre-commit install `
-## Environment
+
 # Run the code
 To download data from openeo, we have designed two steps
 1. Create a geojson file which contains ROI (polygons) where we want to download the SITS.
