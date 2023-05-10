@@ -1,4 +1,4 @@
-import openeo
+import openeo_mmdc.open import open_job_df
 
 
 def extract_year(dict_metadata: dict):
