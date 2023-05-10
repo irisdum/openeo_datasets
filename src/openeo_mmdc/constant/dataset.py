@@ -49,7 +49,7 @@ L_VAL_TILES = [
 TIMERANGE = ["2017-01-01", "2017-12-31"]
 OUTDIR = Path("/home/dumeuri/Documents/dataset/MMDC_OE")
 
-FEATURES_VAL = "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
+# FEATURES_VAL = "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
 FEATURES_TRAIN = (
     "/home/dumeuri/Documents/dataset/datacubes/pretrain_val.geojson"
 )

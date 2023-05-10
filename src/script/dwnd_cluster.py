@@ -5,8 +5,10 @@ import os
 from pathlib import Path
 
 import dask
+import hydra
 import openeo
 from dask.distributed import Client
+from omegaconf import DictConfig
 
 from openeo_mmdc.build_datacube import sub_dir_name
 from openeo_mmdc.open import open_job_df
@@ -52,15 +54,17 @@ def extract_suffix(dict_metadata: dict):
     return dict_metadata["properties"]["title"]
 
 
-def main(list_id: list[str], c, ex_dir):
+@hydra.main(config_path="../../config/", config_name="dwnd.yaml")
+def main(config: DictConfig, connection):
     """
-
     Args:
-        list_id (): is a the list of doi we want to use
-
     Returns:
-
     """
+    c = openeo.connect("openeo.cloud")
+    c.authenticate_oidc()
+    Client(threads_per_worker=4, n_workers=1)
+    ex_dir = config.ex_dir
+    list_id = open_job_df(config.path_csv)
     for job_id in list_id:
         res = c.job(job_id).get_results()
         try:
@@ -87,7 +91,7 @@ def main(list_id: list[str], c, ex_dir):
                                 assets_metadata[roi]["href"], ex_dir=out_dir
                             )
                         )
-                    ]
+                    ]  # TODO not sure maybe change that ...
                 else:
                     print(f"file {roi} exists")
         except openeo.rest.OpenEoApiError:
@@ -95,11 +99,5 @@ def main(list_id: list[str], c, ex_dir):
 
 
 if __name__ == "__main__":
-    c = openeo.connect("openeo.cloud")
-    c.authenticate_oidc()
-    client = Client(threads_per_worker=4, n_workers=1)
     # list_jobs = ["vito-j-e9178da12c0b4c9f8a586e071e871aa2"]
-    list_jobs = open_job_df(
-        "/media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230505.csv"
-    )
-    main(list_jobs, c, ex_dir="/media/dumeuri/DATA/Data/Iris/MMDC_OE/")
+    main()

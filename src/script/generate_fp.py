@@ -2,15 +2,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import geopandas
+import hydra
 import numpy as np
 import pandas as pd
 import shapely
 
-from openeo_mmdc.constant.dataset import (
-    L_TRAIN_TILES,
-    L_VAL_TILES,
-    S2_TILES_SHP,
-)
+from openeo_mmdc.constant.dataset import L_TRAIN_TILES, S2_TILES_SHP
 
 SEED = 4
 
@@ -145,16 +142,16 @@ class InputFP:
     box_size: int
 
 
-if __name__ == "__main__":
-    train_input_fp = InputFP(
-        "train", list_tile=L_TRAIN_TILES, num_boxes=10, box_size=5120
+@hydra.main(config_path="../../config/", config_name="generate_fp.yaml")
+def main(config):
+    input_fp = InputFP(
+        list_tile=config.s2_tile,
+        num_boxes=config.n_roi,
+        box_size=config.roi_size,
+        dataset_type=config.dataset_type,
     )
-    val_input_fp = InputFP(
-        "val", list_tile=L_VAL_TILES, num_boxes=30, box_size=1280
-    )
-    input_fp = val_input_fp
     list_tile = input_fp.list_tile
-    df = open_s2_fp(l_tile_name=list_tile)
+    df = open_s2_fp(l_tile_name=list_tile, file_path=config.path_s2_shp)
     print("orginal", df.crs)
     # print(L_TILES[0])
     print(len(df))
@@ -170,5 +167,16 @@ if __name__ == "__main__":
         ]
         bbox_df = pd.concat(l_bbox_df)
         bbox_df.to_file(
-            f"/home/dumeuri/Documents/dataset/pretrain_{input_fp.dataset_type}_{tile}.geojson"
+            f"{config.ex_dir}/pretrain_{input_fp.dataset_type}_{tile}.geojson"
         )
+
+
+if __name__ == "__main__":
+    # train_input_fp = InputFP(
+    #     "train", list_tile=L_TRAIN_TILES, num_boxes=10, box_size=5120
+    # )
+    # val_input_fp = InputFP(
+    #     "val", list_tile=L_VAL_TILES, num_boxes=30, box_size=1280
+    # )
+    # input_fp = val_input_fp
+    main()

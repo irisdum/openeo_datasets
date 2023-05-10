@@ -1,0 +1,14 @@
+defaults:
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+year: 2021
+pattern: pretrain_val*.geojson
+geojson_dir: /home/dumeuri/Documents/dataset/datacubes/geojson
+id: 1
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

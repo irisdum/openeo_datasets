@@ -3,7 +3,9 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+import hydra
 import openeo
+from omegaconf import DictConfig
 from openeo import BatchJob, DataCube
 
 from openeo_mmdc.build_datacube import (
@@ -13,7 +15,6 @@ from openeo_mmdc.build_datacube import (
     download_s1,
     download_s2,
 )
-from openeo_mmdc.constant.dataset import FEATURES_VAL
 
 
 @dataclass
@@ -39,14 +40,16 @@ def pull_and_download(jobs: list[OutRunJob], download: bool = False):
         time.sleep(30)
 
 
-if __name__ == "__main__":
+@hydra.main(config_path="../../config/", config_name="generate_datacube.yaml")
+def main(config: DictConfig):
     c = openeo.connect("openeo.cloud")
     c.authenticate_oidc()
     print(c.describe_account())
-    year = "2020"
-    TIMERANGE = [f"{year}-01-01", f"{year}-12-31"]
-    assert len(FEATURES_VAL) > 0, "No geoson file found"
-    features = FEATURES_VAL[1]
+    year = str(config.year)
+    TIMERANGE = [f"{config.year}-01-01", f"{config.year}-12-31"]
+    FEAT = sorted(Path(config.geojson_dir).rglob(pattern=config.pattern))
+    assert FEAT, "No geoson file found"
+    features = FEAT[config.id]
     tile = features.name.split("_")[-1].split(".")[0]
     features = str(features)
     print(Path.cwd())
@@ -54,16 +57,16 @@ if __name__ == "__main__":
         with open(features) as feat:
             print(feat)
             features = json.load(feat)
-    print(features)
+    # print(features)
     output_s2 = download_s2(
         c,
         features=features,
         tile=tile,
         temporal_extent=TIMERANGE,
         year=year,
-        run=False,
+        run=True,
     )
-    job_s1_asc = download_s1(
+    download_s1(
         c,
         collection_s2=output_s2.collection,
         orbit="ASCENDING",
@@ -72,7 +75,7 @@ if __name__ == "__main__":
         temporal_extent=TIMERANGE,
         year=year,
     )
-    job_s1_des = download_s1(
+    download_s1(
         c,
         collection_s2=output_s2.collection,
         orbit="DESCENDING",
@@ -92,7 +95,7 @@ if __name__ == "__main__":
         "wind-speed",
     ]
     for b in agera5_bands:
-        job_agora = download_agora_per_band(
+        download_agora_per_band(
             c,
             collection_s2=output_s2.collection,
             features=features,
@@ -101,15 +104,14 @@ if __name__ == "__main__":
             year=year,
             bands=[b],
         )
-    job_dem = download_dem(
+    download_dem(
         c,
         collection_s2=output_s2.collection,
         features=features,
         tile=tile,
         year=year,
     )
-    pull_and_download(
-        [job_agora],
-        download=False,
-    )  # job_s1_asc, job_s1_des, job_agora, job_dem #job_s1_asc, job_s1_des, job_dem
-    # poll_and_download([job_s2, job_s1, job_dem, job_agera5])
+
+
+if __name__ == "__main__":
+    main()
