@@ -14,3 +14,4 @@ pytest
 wget
 openeo
 pre-commit
+rioxarray

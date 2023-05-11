@@ -13,6 +13,7 @@ To download data from openeo, we have designed two steps
 1. Create a geojson file which contains ROI (polygons) where we want to download the SITS.
 2. The creation and generation of the multimodal datacubes with openeo
 3. The download of openeo datacubes
+4. Clip the .nc files into the geosjon geomtries
 ## Create ROIs geojson files
 The script located at `src/script/generate_fp.py` enables downloading the image.
 To run, this script requires the `sentinel_2_index_shapefile.shp`.
@@ -44,3 +45,9 @@ Modify paths defined in `config/dwnd.yaml `.
 To run this file needs the csv of the different batch_id, this csv is available :
 [https://portal.terrascope.be/reporting](https://portal.terrascope.be/reporting)
 (Do export to download)
+
+## Clip the nc files into the geometry
+We have noticed that the .nc files downloaded from openeo contains no data and does not perfectly
+fit the polygon geometry given. The issue [https://discuss.eodc.eu/t/filter-spatial-create-datacubes-which-are-wider-than-the-input-polygons/581](https://discuss.eodc.eu/t/filter-spatial-create-datacubes-which-are-wider-than-the-input-polygons/581)
+documents this case. Until this is fixed, a script to clip (crop) the .nc sits along the generated ROI is given.
+The main script is `crop_data.py `and its configuration file is `crop.yaml`.
