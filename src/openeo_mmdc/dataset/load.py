@@ -2,7 +2,7 @@ import logging.config
 from typing import Literal
 
 from openeo_mmdc.constant.torch_dataloader import LOAD_VARIABLE
-from openeo_mmdc.dataset.dataclass import MMDCDF, ItemTensorMMDC
+from openeo_mmdc.dataset.dataclass import MMDCDF, ItemTensorMMDC, ModTransform
 from openeo_mmdc.dataset.to_tensor import from_dataset2tensor
 from openeo_mmdc.dataset.utils import (
     load_item_dataset_modality,
@@ -27,10 +27,12 @@ def mmdc_sits(
     crop_type: Literal["Center", "Random"],
     max_len: int,
     opt: Literal["all", "s2", "s1", "sentinel"] = "all",
+    all_transform: None | ModTransform = None,
 ) -> ItemTensorMMDC:
     """
 
     Args:
+        transform (): Transform applied to the torch tensor, for instance rescaling
         max_len ():
         crop_type ():
         s2_drop_variable ():
@@ -56,7 +58,9 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
+            transform=all_transform.s2,
         )
+
         my_logger.debug(
             f"out s2 arra{from_dataset2tensor(s2_dataset, max_len).sits.shape}"
         )
@@ -69,6 +73,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
+            transform=all_transform.s1_asc,
         )
         s1_des_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_desc, item=item
@@ -78,6 +83,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
+            transform=all_transform.s1_desc,
         )
     if opt == "all":
         dem_dataset = load_item_dataset_modality(
@@ -88,6 +94,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
+            transform=all_transform.dem,
         )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
@@ -105,5 +112,6 @@ def mmdc_sits(
             max_len=max_len,
             crop_size=crop_size,
             crop_type=crop_type,
+            transform=all_transform.agera5,
         )
     return ItemTensorMMDC(**out)

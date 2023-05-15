@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import pandas as pd
+import torch.nn
 import xarray
 from torch import Tensor
 from xarray import Dataset
@@ -152,11 +153,16 @@ def merge_agera5_datasets(
     max_len: int = 10,
     crop_size=64,
     crop_type: Literal["Center", "Random"] = "Center",
+    transform: None | torch.nn.Module = None,
 ) -> (Tensor, Tensor):
     l_dataset_agera5 = [
         load_item_dataset_modality(mod_df, item) for mod_df in l_agera5_df
     ]
     tot_array = xarray.merge(l_dataset_agera5)  # c,t,h,w
     return from_dataset2tensor(
-        tot_array, max_len=max_len, crop_type=crop_type, crop_size=crop_size
+        tot_array,
+        max_len=max_len,
+        crop_size=crop_size,
+        crop_type=crop_type,
+        transform=transform,
     )

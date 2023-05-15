@@ -2,6 +2,7 @@ import logging.config
 from dataclasses import dataclass
 
 import pandas as pd
+import torch.nn
 from torch import Tensor
 
 logging.config.dictConfig(
@@ -57,3 +58,19 @@ class MMDCDF:
                 "No len found maybe add the computation of the agera5 data"
             )
             return None
+
+
+@dataclass
+class Stats:
+    median: list
+    qmin: list
+    qmax: list
+
+
+@dataclass
+class ModTransform:
+    s2: torch.nn.Module | None = None
+    s1_asc: torch.nn.Module | None = None
+    s1_desc: torch.nn.Module | None = None
+    dem: torch.nn.Module | None = None
+    agera5: torch.nn.Module | None = None

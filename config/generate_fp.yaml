@@ -3,7 +3,7 @@ defaults:
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
-roi_size: 1280
+roi_size: 1280 #in meters
 n_roi: 30
 s2_tile: ["30TYR","31TEK","32TNR","32UPC","33TXK","34UDB"]
 ex_dir: /home/dumeuri/Documents/
