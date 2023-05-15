@@ -60,7 +60,7 @@ def extract_suffix(dict_metadata: dict):
 
 
 @hydra.main(config_path="../../config/", config_name="dwnd.yaml")
-def main(config: DictConfig, connection):
+def main(config: DictConfig):
     """
     Args:
     Returns:

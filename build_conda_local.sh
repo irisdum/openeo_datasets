@@ -29,6 +29,7 @@ echo "create blakc env "
 # Enter virtualenv
 conda deactivate
 conda activate $target
+conda install --yes pytorch=2.0.0 -c pytorch
 conda install -c conda-forge curl
 which python
 python --version

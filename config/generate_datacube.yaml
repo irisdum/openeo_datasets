@@ -5,7 +5,7 @@ defaults:
 
 year: 2021
 pattern: pretrain_val*.geojson
-geojson_dir: /home/dumeuri/Documents/dataset/datacubes/geojson
+geojson_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
 id: 1
 
 hydra:

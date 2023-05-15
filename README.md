@@ -41,6 +41,8 @@ To see if the batch job created are running, connect to [https://editor.openeo.c
 ## Download the datacubes
 The script located at `src/script/dwnd_cluster.py` enables downloading the data locally.
 Modify paths defined in `config/dwnd.yaml `.
+The download may not be perfect : we recommend checking for incorrectly downloaded file with : `find . -type f -size -50k`
+
 ### Requirements
 To run this file needs the csv of the different batch_id, this csv is available :
 [https://portal.terrascope.be/reporting](https://portal.terrascope.be/reporting)
@@ -51,3 +53,7 @@ We have noticed that the .nc files downloaded from openeo contains no data and d
 fit the polygon geometry given. The issue [https://discuss.eodc.eu/t/filter-spatial-create-datacubes-which-are-wider-than-the-input-polygons/581](https://discuss.eodc.eu/t/filter-spatial-create-datacubes-which-are-wider-than-the-input-polygons/581)
 documents this case. Until this is fixed, a script to clip (crop) the .nc sits along the generated ROI is given.
 The main script is `crop_data.py `and its configuration file is `crop.yaml`.
+
+# Open the MMDC dataset as torch tensor
+To open the SITS previously downloaded thanks to this script, you can use the `mmdc_sits` function defined in
+`src/openeo_mmdc/dataset/load.py`.

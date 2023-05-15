@@ -163,6 +163,19 @@ def download_agora_per_band(
     if collection_s2 is not None:
         print("resample_spatial_cube in s2")
         agera5 = agera5.resample_cube_spatial(collection_s2, method="cubic")
+    # job_options = {
+    #     "executor-memory": "5G",
+    #     "executor-memoryOverhead": "10G",  # default 2G
+    #     "executor-cores": 1,
+    #     "task-cpus": 1,
+    #     "executor-request-cores": "400m",
+    #     "max-executors": "100",
+    #     "driver-memory": "12G",
+    #     "driver-memoryOverhead": "10G",
+    #     "driver-cores": 5,
+    #     "udf-dependency-archives": [],
+    #     "logging-threshold": "info",
+    # }
     job_options = {
         "executor-memory": "5G",
         "executor-memoryOverhead": "10G",  # default 2G
