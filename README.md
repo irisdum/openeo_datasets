@@ -30,6 +30,10 @@ This script create datacubes resampled at the S2 resolution for the following co
 - Sentinel 1 Descending
 - DEM
 - AGERA5
+
+
+To exploit --multirun option from hydra you can run :
+`python generate_datacube.py year=2017,2018,2019,2020 --multirun ` WIth this command you download data for all
 ### Requirements:
 To run this script needs:
 - A geojson fil with the ROIs
