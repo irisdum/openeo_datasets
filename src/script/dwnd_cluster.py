@@ -110,6 +110,7 @@ def main(config: DictConfig):
                     ]
                 else:
                     print(f"file {roi} exists")
+                dask.compute(*l_out)
         except openeo.rest.OpenEoApiError:
             print(f"OPenAI rest error {res} ")
 

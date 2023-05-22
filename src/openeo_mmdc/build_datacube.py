@@ -1,3 +1,4 @@
+import logging.config
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,14 @@ from openeo_mmdc.constant.dataset import (
     S2_COLLECTION,
     TIMERANGE,
 )
+
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": True,
+    }
+)
+my_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,7 +41,7 @@ def run_job(
     if job_options is None:
         job_options = {}
     out_dir = OUTDIR / subdir
-    print(type(datacube))
+    my_logger.debug(type(datacube))
     datacube = datacube.filter_spatial(features)
     if run:
         job = datacube.create_job(
@@ -56,7 +65,7 @@ def run_job(
 def download_s2(
     connection,
     temporal_extent: list | None = None,
-    max_cc=50,
+    max_cc: int = 100,
     year=None,
     features=FEATURES_VAL,
     tile=None,
@@ -64,9 +73,13 @@ def download_s2(
 ) -> OutRunJob:
     if temporal_extent is None:
         temporal_extent = TIMERANGE
-    print(temporal_extent)
+    my_logger.debug(temporal_extent)
     sentinel2 = connection.load_collection(
-        S2_COLLECTION, temporal_extent=temporal_extent, bands=S2_BANDS
+        S2_COLLECTION,
+        temporal_extent=temporal_extent,
+        bands=S2_BANDS,
+        max_cloud_cover=max_cc,
+        properties={"provider:backend": lambda v: v == "vito"},
     )
     job_options = {
         "executor-memory": "3G",

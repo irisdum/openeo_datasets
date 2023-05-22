@@ -3,10 +3,11 @@ defaults:
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
-year: 2021
-pattern: pretrain_val*.geojson
+year: 2017
+pattern: pretrain_train*.geojson
 geojson_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
-id: 1
+id: 0
+max_cc: 50
 
 hydra:
   output_subdir: null

@@ -3,12 +3,12 @@ defaults:
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
-roi_size: 1280 #in meters
-n_roi: 30
-s2_tile: ["30TYR","31TEK","32TNR","32UPC","33TXK","34UDB"]
-ex_dir: /home/dumeuri/Documents/
+roi_size: 5120 #in meters
+n_roi: 10
+s2_tile: ["30TXT","31TDL","31TBG"]#["30TYR","31TEK","32TNR","32UPC","33TXK","34UDB"]
+ex_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
 path_s2_shp: "/home/dumeuri/Documents/dataset/Sentinel-2-Shapefile-Index/sentinel_2_index_shapefile.shp"
-dataset_type: val
+dataset_type: train
 hydra:
   output_subdir: null
   run:

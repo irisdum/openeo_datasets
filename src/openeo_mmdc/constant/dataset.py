@@ -15,6 +15,8 @@ S2_BANDS = [
     "B11",
     "B12",
     "SCL",
+    "CLD",
+    "CLP",
     "CLM",
     "sunAzimuthAngles",
     "sunZenithAngles",
@@ -87,3 +89,5 @@ D_AGERA5_BAND_NAME = dict(
         ],
     )
 )
+
+REF_DATE = "2014-03-03"

@@ -1,7 +1,7 @@
 import logging.config
 from typing import Literal
 
-from openeo_mmdc.constant.torch_dataloader import LOAD_VARIABLE
+from openeo_mmdc.constant.torch_dataloader import CLD_MASK_BAND, S2_BAND
 from openeo_mmdc.dataset.dataclass import MMDCDF, ItemTensorMMDC, ModTransform
 from openeo_mmdc.dataset.to_tensor import from_dataset2tensor
 from openeo_mmdc.dataset.utils import (
@@ -22,16 +22,20 @@ def mmdc_sits(
     c_mmdc_df: MMDCDF,
     item,
     s2_drop_variable: list["str"],
-    s2_load_variables: list[str] | None,
+    s2_load_bands: list[str] | None,
     crop_size: int,
     crop_type: Literal["Center", "Random"],
     max_len: int,
     opt: Literal["all", "s2", "s1", "sentinel"] = "all",
     all_transform: None | ModTransform = None,
+    s2_band_mask: list | None = None,
 ) -> ItemTensorMMDC:
     """
 
     Args:
+        all_transform ():
+        crop_size ():
+        s2_load_bands ():
         transform (): Transform applied to the torch tensor, for instance rescaling
         max_len ():
         crop_type ():
@@ -44,23 +48,26 @@ def mmdc_sits(
 
     """
     out = {}
-    if s2_load_variables is None:
-        s2_load_variables = LOAD_VARIABLE
+    if s2_load_bands is None:
+        s2_load_bands = S2_BAND
+    if s2_band_mask is None:
+        s2_band_mask = CLD_MASK_BAND
     if opt in ("all", "s2"):
         s2_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s2,
             item=item,
             drop_variable=s2_drop_variable,
-            load_variables=s2_load_variables,
+            load_variables=s2_load_bands + s2_band_mask,
         )
         out["s2"] = from_dataset2tensor(
             s2_dataset,
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
-            transform=all_transform.s2,
+            transform=all_transform.s2.transform,
+            band_cld=s2_band_mask,
+            load_variable=s2_load_bands,
         )
-
         my_logger.debug(
             f"out s2 arra{from_dataset2tensor(s2_dataset, max_len).sits.shape}"
         )
@@ -73,7 +80,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
-            transform=all_transform.s1_asc,
+            transform=all_transform.s1_asc.transform,
         )
         s1_des_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_desc, item=item
@@ -83,7 +90,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
-            transform=all_transform.s1_desc,
+            transform=all_transform.s1_desc.transform,
         )
     if opt == "all":
         dem_dataset = load_item_dataset_modality(
@@ -94,7 +101,7 @@ def mmdc_sits(
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
-            transform=all_transform.dem,
+            transform=all_transform.dem.transform,
         )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
@@ -112,6 +119,6 @@ def mmdc_sits(
             max_len=max_len,
             crop_size=crop_size,
             crop_type=crop_type,
-            transform=all_transform.agera5,
+            transform=all_transform.agera5.transform,
         )
     return ItemTensorMMDC(**out)

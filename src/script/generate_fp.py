@@ -24,10 +24,12 @@ def open_s2_fp(l_tile_name: list | None, file_path: str = S2_TILES_SHP):
     """
     assert Path(file_path).exists(), f"No file found at {file_path}"
     df = geopandas.read_file(file_path)
+
     if l_tile_name is None:
         l_tile_name = L_TRAIN_TILES
     df["cond"] = df.apply(lambda x: x.Name in l_tile_name, axis=1)
     sub_df = df[df["cond"]]
+
     assert len(sub_df) == len(
         l_tile_name
     ), "Not all tiles have been selected expected {} got {}".format(

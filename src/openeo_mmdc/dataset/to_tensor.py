@@ -7,11 +7,18 @@ import numpy as np
 import pandas as pd
 import torch
 import xarray
-from torchvision import transforms
+from torch import Tensor
+from xarray import DataArray, Dataset
 
 from openeo_mmdc.constant.torch_dataloader import D_MODALITY
-from openeo_mmdc.dataset.dataclass import ModTransform, OneMod, Stats
-from openeo_mmdc.dataset.transform import Clip
+from openeo_mmdc.dataset.dataclass import (
+    MaskMod,
+    ModTransform,
+    OneMod,
+    OneTransform,
+    Stats,
+)
+from openeo_mmdc.dataset.transform import Clip, S2Normalize
 
 logging.config.dictConfig(
     {
@@ -28,6 +35,8 @@ def from_dataset2tensor(
     crop_size=64,
     crop_type: Literal["Center", "Random"] = "Center",
     transform=None,
+    band_cld: list | None = None,
+    load_variable: list | None = None,
 ) -> OneMod:
     d_s = dataset.sizes
 
@@ -36,7 +45,15 @@ def from_dataset2tensor(
     time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
-    sits = dataset.to_array()
+    my_logger.debug(dataset)
+    if load_variable is not None:
+        spectral_dataset = dataset[load_variable]
+        if band_cld is not None:
+            cld_dataset = dataset[band_cld]
+    else:
+        spectral_dataset = dataset
+    sits = spectral_dataset.to_array()
+
     row, cols = sits.shape[-2], sits.shape[-1]
     x, y = get_crop_idx(
         rows=row, cols=cols, crop_size=crop_size, crop_type=crop_type
@@ -44,9 +61,32 @@ def from_dataset2tensor(
     my_logger.debug(sits.shape)
     sits = sits[:, :, x : x + crop_size, y : y + crop_size]
     sits = torch.Tensor(sits.values)
+    if band_cld is not None:
+        nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
+        cld_mask = crop_dataset(cld_dataset[["CLM"]], x, y, crop_size)
+        mask_sits = MaskMod(
+            mask_cld=cld_mask,
+            mask_nan=nan_mask,
+            mask_slc=crop_dataset(cld_dataset[["SCL"]], x, y, crop_size),
+        )
+        # print(f"mask cld {cld_mask[0,:,0,0]}")
+    else:
+        my_logger.debug("No cld mask applied")
+        mask_sits = MaskMod()
     if transform is not None:
+        my_logger.debug("apply transform")
         sits = transform(sits)
-    return OneMod(sits, torch.Tensor(time))
+
+    return OneMod(sits, torch.Tensor(time), mask=mask_sits)
+
+
+def crop_tensor(tensor: DataArray, x, y, crop_size) -> DataArray:
+    return tensor[:, :, x : x + crop_size, y : y + crop_size]
+
+
+def crop_dataset(dataset: Dataset, x, y, crop_size) -> Tensor:
+    array = dataset.to_array()
+    return torch.Tensor(crop_tensor(array, x, y, crop_size).values)
 
 
 def get_crop_idx(
@@ -138,7 +178,7 @@ def load_transform_one_mod(
             "wind_speed",
         ]
     ] = "s2",
-) -> None | torch.nn.Module:
+) -> [None | torch.nn.Module, Stats]:
     if path_dir_csv is not None:
         if isinstance(mod, str):
             path_csv = Path(path_dir_csv).joinpath(
@@ -148,9 +188,24 @@ def load_transform_one_mod(
             scale = tuple(
                 [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)]
             )
-            return torch.nn.Sequential(
-                Clip(qmin=stats.qmin, qmax=stats.qmax),
-                transforms.Normalize(mean=stats.median, std=scale),
+            if mod == "s2":
+                return OneTransform(
+                    torch.nn.Sequential(
+                        Clip(
+                            qmin=stats.qmin, qmax=stats.qmax, s2_partial=False
+                        ),
+                        S2Normalize(
+                            med=stats.median, scale=scale, s2_partial=False
+                        ),
+                    ),
+                    stats,
+                )
+            return OneTransform(
+                torch.nn.Sequential(
+                    Clip(qmin=stats.qmin, qmax=stats.qmax),
+                    S2Normalize(med=stats.median, scale=scale),
+                ),
+                stats,
             )
         elif isinstance(mod, list):
             stats = merge_stats_agera5(
@@ -159,9 +214,12 @@ def load_transform_one_mod(
             scale = tuple(
                 [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)]
             )
-            return torch.nn.Sequential(
-                Clip(qmin=stats.qmin, qmax=stats.qmax),
-                transforms.Normalize(mean=stats.median, std=scale),
+            return OneTransform(
+                torch.nn.Sequential(
+                    Clip(qmin=stats.qmin, qmax=stats.qmax),
+                    S2Normalize(med=stats.median, scale=scale),
+                ),
+                stats,
             )
         else:
             raise NotImplementedError

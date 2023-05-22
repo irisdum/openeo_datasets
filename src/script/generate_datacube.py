@@ -65,6 +65,7 @@ def main(config: DictConfig):
         temporal_extent=TIMERANGE,
         year=year,
         run=True,
+        max_cc=config.max_cc,
     )
     download_s1(
         c,

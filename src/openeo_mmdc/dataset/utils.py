@@ -133,6 +133,7 @@ def load_item_dataset_modality(
         dataset = dataset.drop_vars(names=drop_variable)
     if load_variables:
         dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
+        my_logger.debug(dataset)
     my_logger.debug(list(dataset.data_vars))
 
     return dataset

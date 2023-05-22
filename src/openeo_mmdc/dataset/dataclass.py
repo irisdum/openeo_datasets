@@ -15,9 +15,18 @@ my_logger = logging.getLogger(__name__)
 
 
 @dataclass
+class MaskMod:
+    mask_cld: Tensor | None = None
+    mask_nan: Tensor | None = None
+    mask_slc: Tensor | None = None
+    mask_clp: Tensor | None = None
+
+
+@dataclass
 class OneMod:
     sits: Tensor
     doy: Tensor
+    mask: MaskMod = MaskMod()
 
 
 @dataclass
@@ -68,9 +77,15 @@ class Stats:
 
 
 @dataclass
+class OneTransform:
+    transform: torch.nn.Module | None = None
+    stats: Stats | None = None
+
+
+@dataclass
 class ModTransform:
-    s2: torch.nn.Module | None = None
-    s1_asc: torch.nn.Module | None = None
-    s1_desc: torch.nn.Module | None = None
-    dem: torch.nn.Module | None = None
-    agera5: torch.nn.Module | None = None
+    s2: OneTransform | None = OneTransform()
+    s1_asc: OneTransform | None = OneTransform()
+    s1_desc: OneTransform | None = OneTransform()
+    dem: OneTransform | None = OneTransform()
+    agera5: OneTransform | None = OneTransform()
