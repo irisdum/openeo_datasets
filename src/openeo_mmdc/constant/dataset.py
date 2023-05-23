@@ -15,8 +15,6 @@ S2_BANDS = [
     "B11",
     "B12",
     "SCL",
-    "CLD",
-    "CLP",
     "CLM",
     "sunAzimuthAngles",
     "sunZenithAngles",

@@ -106,10 +106,13 @@ def get_crop_idx(
     if crop_type == "Random":
         return randomcropindex(rows, cols, crop_size, crop_size)
 
-    return int(rows // 2 - crop_size), int(cols // 2 - crop_size)
+    return int(rows - crop_size) // 2, int(cols - crop_size) // 2
 
 
-def time_delta(date: np.ndarray, reference_date: np.datetime64 | None = None):
+def time_delta(
+    int_date: np.ndarray, reference_date: np.datetime64 | None = None
+):
+    date = np.datetime64("1990-01-01") + int_date.astype(int)
     if reference_date is None:
         reference_date = np.datetime64("2014-03-03", "D")
     duration = date - reference_date

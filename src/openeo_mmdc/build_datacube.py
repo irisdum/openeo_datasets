@@ -82,8 +82,8 @@ def download_s2(
         properties={"provider:backend": lambda v: v == "vito"},
     )
     job_options = {
-        "executor-memory": "3G",
-        "executor-memoryOverhead": "10G",  # default 2G
+        "executor-memory": "6G",
+        "executor-memoryOverhead": "12G",  # default 2G
         "executor-cores": 2,
         "task-cpus": 1,
         "executor-request-cores": "400m",
@@ -117,21 +117,38 @@ def download_s1(
     properties = {"sat:orbit_state": lambda od: od == orbit}
     if temporal_extent is None:
         temporal_extent = TIMERANGE
-    sentinel1 = connection.load_collection(
-        "SENTINEL1_GRD",
-        temporal_extent=temporal_extent,
-        bands=["VV", "VH"],
-        properties=properties,
-    ).sar_backscatter(
-        coefficient="gamma0-terrain",
-        elevation_model=None,
-        mask=False,
-        contributing_area=False,
-        local_incidence_angle=True,
-        ellipsoid_incidence_angle=False,
-        noise_removal=True,
-        options=None,
-    )
+    try:
+        sentinel1 = connection.load_collection(
+            "SENTINEL1_GRD",
+            temporal_extent=temporal_extent,
+            bands=["VV", "VH"],
+            properties=properties,
+        ).sar_backscatter(
+            coefficient="gamma0-terrain",
+            elevation_model=None,
+            mask=False,
+            contributing_area=False,
+            local_incidence_angle=True,
+            ellipsoid_incidence_angle=False,
+            noise_removal=True,
+            options=None,
+        )
+    except ValueError:
+        sentinel1 = connection.load_collection(
+            "SENTINEL1_GRD",
+            temporal_extent=temporal_extent,
+            bands=["VV", "VV+VH"],
+            properties=properties,
+        ).sar_backscatter(
+            coefficient="gamma0-terrain",
+            elevation_model=None,
+            mask=False,
+            contributing_area=False,
+            local_incidence_angle=True,
+            ellipsoid_incidence_angle=False,
+            noise_removal=True,
+            options=None,
+        )
 
     if collection_s2 is not None:
         sentinel1 = sentinel1.resample_cube_spatial(

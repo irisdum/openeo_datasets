@@ -30,7 +30,9 @@ def compute_stats_one_mod(
     idx_file = random.sample([i for i in range(len(list_all_files))], max_img)
     l_open_file = [list_all_files[idx] for idx in idx_file]
     my_logger.info(l_open_file)
-    global_dataset = xarray.open_mfdataset(l_open_file, combine="nested")
+    global_dataset = xarray.open_mfdataset(
+        l_open_file, combine="nested", decode_cf=False
+    )
     my_logger.info(global_dataset)
 
     global_dataset = order_dataset_vars(

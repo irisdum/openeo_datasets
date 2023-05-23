@@ -129,7 +129,7 @@ def load_item_dataset_modality(
     # print(item_series["sits_path"])
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
-    dataset = xarray.open_mfdataset(path_im, combine="nested")
+    dataset = xarray.open_mfdataset(path_im, combine="nested", decode_cf=False)
     if drop_variable is not None:
         dataset = dataset.drop_vars(names=drop_variable)
     if load_variables:
@@ -151,8 +151,7 @@ def order_dataset_vars(dataset, list_vars_order=None):
         sorted_vars = sorted(dataset.data_vars)
     else:
         sorted_vars = list_vars_order
-    sort_dataset = [dataset[var] for var in sorted_vars]
-    return xarray.merge(sort_dataset)
+    return dataset[sorted_vars]
 
 
 def merge_agera5_datasets(

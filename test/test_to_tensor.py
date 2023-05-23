@@ -25,7 +25,7 @@ def test_from_dataset2tensor(crop_size=64, max_len=20):
     )
     IM = "openEO_0_clip.nc"
     PATH_SITS = Path(PATH_DIR).joinpath(IM)
-    dataset = xarray.open_dataset(PATH_SITS)
+    dataset = xarray.open_dataset(PATH_SITS, decode_cf=False)
     band = ["B02", "B03", "B04"]
     out_mod = from_dataset2tensor(
         dataset=dataset,
@@ -38,6 +38,7 @@ def test_from_dataset2tensor(crop_size=64, max_len=20):
     )
     print(out_mod.sits.shape)
     print(torch.unique(out_mod.mask.mask_slc))
+    print(out_mod.doy)
     print(
         torch.unique(
             out_mod.mask.mask_cld[~torch.isnan(out_mod.mask.mask_cld)]
