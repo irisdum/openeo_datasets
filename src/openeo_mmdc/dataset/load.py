@@ -29,10 +29,12 @@ def mmdc_sits(
     opt: Literal["all", "s2", "s1", "sentinel"] = "all",
     all_transform: None | ModTransform = None,
     s2_band_mask: list | None = None,
+    s2_max_ccp: float | None = None,
 ) -> ItemTensorMMDC:
     """
 
     Args:
+        s2_max_ccp ():
         all_transform ():
         crop_size ():
         s2_load_bands ():
@@ -58,6 +60,7 @@ def mmdc_sits(
             item=item,
             drop_variable=s2_drop_variable,
             load_variables=s2_load_bands + s2_band_mask,
+            s2_max_ccp=s2_max_ccp,
         )
         out["s2"] = from_dataset2tensor(
             s2_dataset,

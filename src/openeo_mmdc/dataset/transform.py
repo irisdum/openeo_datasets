@@ -38,18 +38,13 @@ class Clip(torch.nn.Module):
     def forward(self, tensor: Tensor) -> Tensor:
         my_logger.debug(tensor.shape)
         if self.s2_partial:
-            tmp_tensor = tensor[: -(tensor.shape[0] - len(S2_BAND)), ...]
+            tmp_tensor = tensor
         else:
             tmp_tensor = tensor
         assert len(tensor.shape) == 4
         tmp_tensor = torch.min(
             torch.max(tmp_tensor, self.qmin), self.qmax
         )  # clip values on the quantile
-        if self.s2_partial:
-            tensor[: -(tensor.shape[0] - len(S2_BAND)), ...] = (
-                tmp_tensor  # so cloud mask not normalized
-            )
-            return tensor
         return tmp_tensor
 
     def __repr__(self):

@@ -116,6 +116,7 @@ def load_item_dataset_modality(
     item: int,
     drop_variable: Hashable | Iterable[Hashable] = None,
     load_variables=None,
+    s2_max_ccp: float | None = None,
 ) -> Dataset:
     my_logger.debug(f"item{item}")
     item_series = mod_df.iloc[item]
@@ -135,7 +136,13 @@ def load_item_dataset_modality(
         dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
         my_logger.debug(dataset)
     my_logger.debug(list(dataset.data_vars))
-
+    if s2_max_ccp is not None:
+        max_pix_cc = dataset.sizes["x"] * s2_max_ccp
+        ccp = dataset[["CLM"]].sum(dim=["x", "y"])
+        ccp = ccp.compute()
+        dataset = dataset.sel(
+            t=ccp.where(ccp["CLM"] < max_pix_cc, drop=True)["t"]
+        )
     return dataset
 
 
