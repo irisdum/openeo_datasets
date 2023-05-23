@@ -20,12 +20,10 @@ from openeo_mmdc.dataset.dataclass import (
 )
 from openeo_mmdc.dataset.transform import Clip, S2Normalize
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": True,
+})
 my_logger = logging.getLogger(__name__)
 
 
@@ -57,11 +55,12 @@ def from_dataset2tensor(
     sits = spectral_dataset.to_array()
 
     row, cols = sits.shape[-2], sits.shape[-1]
-    x, y = get_crop_idx(
-        rows=row, cols=cols, crop_size=crop_size, crop_type=crop_type
-    )
+    x, y = get_crop_idx(rows=row,
+                        cols=cols,
+                        crop_size=crop_size,
+                        crop_type=crop_type)
     my_logger.debug(sits.shape)
-    sits = sits[:, :, x : x + crop_size, y : y + crop_size]
+    sits = sits[:, :, x:x + crop_size, y:y + crop_size]
     sits = torch.Tensor(sits.values)
     if band_cld is not None:
         nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
@@ -73,17 +72,17 @@ def from_dataset2tensor(
         )
         # print(f"mask cld {cld_mask[0,:,0,0]}")
     else:
-        my_logger.debug("No cld mask applied")
+        my_logger.info("No cld mask applied")
         mask_sits = MaskMod()
     if transform is not None:
-        my_logger.debug("apply transform")
+        my_logger.info("apply transform")
         sits = transform(sits)
-
+        assert torch.count_nonzero(torch.isnan(sits)) == 0, "Nan input"
     return OneMod(sits, torch.Tensor(time), mask=mask_sits)
 
 
 def crop_tensor(tensor: DataArray, x, y, crop_size) -> DataArray:
-    return tensor[:, :, x : x + crop_size, y : y + crop_size]
+    return tensor[:, :, x:x + crop_size, y:y + crop_size]
 
 
 def crop_dataset(dataset: Dataset, x, y, crop_size) -> Tensor:
@@ -121,9 +120,8 @@ def time_delta(
     return duration
 
 
-def randomcropindex(
-    img_h: int, img_w: int, cropped_h: int, cropped_w: int
-) -> tuple[int, int]:
+def randomcropindex(img_h: int, img_w: int, cropped_h: int,
+                    cropped_w: int) -> tuple[int, int]:
     """
     Generate random numbers for window cropping of the patch (used in rasterio window)
     Args:
@@ -157,8 +155,7 @@ def merge_stats_agera5(path_dir_csv, l_agera_mod) -> Stats:
     l_df = []
     for mod in l_agera_mod:
         path_file = Path(path_dir_csv).joinpath(
-            f"dataset_{D_MODALITY[mod]}.csv"
-        )
+            f"dataset_{D_MODALITY[mod]}.csv")
         l_df += [pd.read_csv(path_file, index_col=0)]
     df_stats = pd.concat(l_df, axis=1)
     return Stats(
@@ -171,37 +168,25 @@ def merge_stats_agera5(path_dir_csv, l_agera_mod) -> Stats:
 def load_transform_one_mod(
     path_dir_csv: str | None = None,
     mod: Literal["s2", "s1_asc", "s1_desc", "dem"]
-    | list[
-        Literal[
-            "dew_temp",
-            "prec",
-            "sol_rad",
-            "temp_max",
-            "temp_mean",
-            "temp_min",
-            "val_press",
-            "wind_speed",
-        ]
-    ] = "s2",
+    | list[Literal["dew_temp", "prec", "sol_rad", "temp_max", "temp_mean",
+                   "temp_min", "val_press", "wind_speed", ]] = "s2",
 ) -> [None | torch.nn.Module, Stats]:
     if path_dir_csv is not None:
         if isinstance(mod, str):
             path_csv = Path(path_dir_csv).joinpath(
-                f"dataset_{D_MODALITY[mod]}.csv"
-            )
+                f"dataset_{D_MODALITY[mod]}.csv")
             stats = read_csv_stat(path_csv)
             scale = tuple(
-                [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)]
-            )
+                [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)])
             if mod == "s2":
                 return OneTransform(
                     torch.nn.Sequential(
-                        Clip(
-                            qmin=stats.qmin, qmax=stats.qmax, s2_partial=False
-                        ),
-                        S2Normalize(
-                            med=stats.median, scale=scale, s2_partial=False
-                        ),
+                        Clip(qmin=stats.qmin,
+                             qmax=stats.qmax,
+                             s2_partial=False),
+                        S2Normalize(med=stats.median,
+                                    scale=scale,
+                                    s2_partial=False),
                     ),
                     stats,
                 )
@@ -213,12 +198,10 @@ def load_transform_one_mod(
                 stats,
             )
         elif isinstance(mod, list):
-            stats = merge_stats_agera5(
-                path_dir_csv=path_dir_csv, l_agera_mod=mod
-            )
+            stats = merge_stats_agera5(path_dir_csv=path_dir_csv,
+                                       l_agera_mod=mod)
             scale = tuple(
-                [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)]
-            )
+                [float(x) - float(y) for x, y in zip(stats.qmax, stats.qmin)])
             return OneTransform(
                 torch.nn.Sequential(
                     Clip(qmin=stats.qmin, qmax=stats.qmax),
@@ -238,7 +221,6 @@ def load_all_transforms(
 ):
     all_transform = {}
     for mod in modalities:
-        all_transform[mod] = load_transform_one_mod(
-            path_dir_csv=path_dir_csv, mod=mod
-        )
+        all_transform[mod] = load_transform_one_mod(path_dir_csv=path_dir_csv,
+                                                    mod=mod)
     return ModTransform(**all_transform)
