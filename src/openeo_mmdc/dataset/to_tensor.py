@@ -63,8 +63,11 @@ def from_dataset2tensor(
     sits = sits[:, :, x:x + crop_size, y:y + crop_size]
     sits = torch.Tensor(sits.values)
     if band_cld is not None:
-        nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
+        #nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
+
         cld_mask = crop_dataset(cld_dataset[["CLM"]], x, y, crop_size)
+        nan_mask = crop_dataset(cld_dataset[["SCL"]], x, y, crop_size) == 0
+
         mask_sits = MaskMod(
             mask_cld=cld_mask,
             mask_nan=nan_mask,
@@ -110,9 +113,8 @@ def get_crop_idx(
     return int(rows - crop_size) // 2, int(cols - crop_size) // 2
 
 
-def time_delta(
-    int_date: np.ndarray, reference_date: np.datetime64 | None = None
-):
+def time_delta(int_date: np.ndarray,
+               reference_date: np.datetime64 | None = None):
     date = np.datetime64("1990-01-01") + int_date.astype(int)
     if reference_date is None:
         reference_date = np.datetime64("2014-03-03", "D")
@@ -168,8 +170,16 @@ def merge_stats_agera5(path_dir_csv, l_agera_mod) -> Stats:
 def load_transform_one_mod(
     path_dir_csv: str | None = None,
     mod: Literal["s2", "s1_asc", "s1_desc", "dem"]
-    | list[Literal["dew_temp", "prec", "sol_rad", "temp_max", "temp_mean",
-                   "temp_min", "val_press", "wind_speed", ]] = "s2",
+    | list[Literal[
+        "dew_temp",
+        "prec",
+        "sol_rad",
+        "temp_max",
+        "temp_mean",
+        "temp_min",
+        "val_press",
+        "wind_speed",
+    ]] = "s2",
 ) -> [None | torch.nn.Module, Stats]:
     if path_dir_csv is not None:
         if isinstance(mod, str):
@@ -218,7 +228,7 @@ def load_transform_one_mod(
 def load_all_transforms(
     path_dir_csv,
     modalities: list[Literal["s2", "s1_asc", "s1_desc", "dem", "agera5"]],
-):
+) -> ModTransform:
     all_transform = {}
     for mod in modalities:
         all_transform[mod] = load_transform_one_mod(path_dir_csv=path_dir_csv,
