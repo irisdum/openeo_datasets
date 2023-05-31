@@ -4,7 +4,7 @@ defaults:
   - override hydra/job_logging: disabled
 
 where: local
-path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230522.csv
+path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230526(1).csv
 ex_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/
 
 hydra:

@@ -161,6 +161,7 @@ def merge_agera5_datasets(
     crop_size=64,
     crop_type: Literal["Center", "Random"] = "Center",
     transform: None | torch.nn.Module = None,
+    seed=None,
 ) -> (Tensor, Tensor):
     l_dataset_agera5 = [
         load_item_dataset_modality(mod_df, item) for mod_df in l_agera5_df
@@ -172,4 +173,5 @@ def merge_agera5_datasets(
         crop_size=crop_size,
         crop_type=crop_type,
         transform=transform,
+        seed=seed,
     )

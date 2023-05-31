@@ -6,8 +6,8 @@ defaults:
 year: 2017
 pattern: pretrain_train*.geojson
 geojson_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
-id: 0
-max_cc: 50
+id: 4
+max_cc: 100
 
 hydra:
   output_subdir: null

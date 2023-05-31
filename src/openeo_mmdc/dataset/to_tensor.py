@@ -37,9 +37,11 @@ def from_dataset2tensor(
     transform=None,
     band_cld: list | None = None,
     load_variable: list | None = None,
+    seed: int | None = None,
 ) -> OneMod:
     d_s = dataset.sizes
-
+    if seed is not None:
+        random.seed(seed)
     temp_idx = sorted(random.sample([i for i in range(d_s["t"])], max_len))
     dataset = dataset.isel({"t": temp_idx})
     time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])

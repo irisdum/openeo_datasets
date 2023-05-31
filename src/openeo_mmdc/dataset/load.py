@@ -30,10 +30,12 @@ def mmdc_sits(
     all_transform: None | ModTransform = None,
     s2_band_mask: list | None = None,
     s2_max_ccp: float | None = None,
+    seed: int | None = None,
 ) -> ItemTensorMMDC:
     """
 
     Args:
+        seed ():
         s2_max_ccp ():
         all_transform ():
         crop_size ():
@@ -70,6 +72,7 @@ def mmdc_sits(
             transform=all_transform.s2.transform,
             band_cld=s2_band_mask,
             load_variable=s2_load_bands,
+            seed=seed,
         )
         my_logger.debug(
             f"out s2 arra{from_dataset2tensor(s2_dataset, max_len).sits.shape}"
@@ -84,6 +87,7 @@ def mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             transform=all_transform.s1_asc.transform,
+            seed=seed,
         )
         s1_des_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_desc, item=item
@@ -94,6 +98,7 @@ def mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             transform=all_transform.s1_desc.transform,
+            seed=seed,
         )
     if opt == "all":
         dem_dataset = load_item_dataset_modality(
@@ -105,6 +110,7 @@ def mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             transform=all_transform.dem.transform,
+            seed=seed,
         )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
@@ -123,5 +129,6 @@ def mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             transform=all_transform.agera5.transform,
+            seed=seed,
         )
     return ItemTensorMMDC(**out)
