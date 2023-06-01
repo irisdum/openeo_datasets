@@ -1,4 +1,4 @@
-import logging.config
+import logging
 import random
 from pathlib import Path
 from typing import Literal
@@ -20,10 +20,6 @@ from openeo_mmdc.dataset.dataclass import (
 )
 from openeo_mmdc.dataset.transform import Clip, S2Normalize
 
-logging.config.dictConfig({
-    "version": 1,
-    "disable_existing_loggers": True,
-})
 my_logger = logging.getLogger(__name__)
 
 
@@ -45,12 +41,18 @@ def from_dataset2tensor(
     time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
-    my_logger.debug(dataset)
+
     if load_variable is not None:
-        spectral_dataset = dataset[load_variable]
+        my_logger.debug(load_variable)
+        spectral_dataset = dataset[list(load_variable)]
+        my_logger.info(band_cld)
         if band_cld is not None:
             cld_dataset = dataset[band_cld]
+            my_logger.info(f"cld band used now{band_cld}")
+        else:
+            my_logger.info(f"cld band not used {band_cld}")
     else:
+
         spectral_dataset = dataset
     sits = spectral_dataset.to_array()
 
@@ -62,6 +64,7 @@ def from_dataset2tensor(
     my_logger.debug(sits.shape)
     sits = sits[:, :, x:x + crop_size, y:y + crop_size]
     sits = torch.Tensor(sits.values)
+    my_logger.debug(band_cld)
     if band_cld is not None:
         #nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
 
@@ -78,7 +81,7 @@ def from_dataset2tensor(
         my_logger.info("No cld mask applied")
         mask_sits = MaskMod()
     if transform is not None:
-        my_logger.info("apply transform")
+        my_logger.debug("apply transform")
         sits = transform(sits)
         assert torch.count_nonzero(torch.isnan(sits)) == 0, "Nan input"
     return OneMod(sits, torch.Tensor(time), mask=mask_sits)

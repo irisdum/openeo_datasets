@@ -1,4 +1,4 @@
-AGERA_DATA = [
+,AGERA_DATA = [
     "DEW_TEMP",
     "PREC",
     "SOL_RAD",

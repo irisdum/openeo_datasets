@@ -13,12 +13,7 @@ from openeo_mmdc.constant.torch_dataloader import D_MODALITY, FORMAT_SITS
 from openeo_mmdc.dataset.dataclass import MMDCDF
 from openeo_mmdc.dataset.to_tensor import from_dataset2tensor
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
+logging.config.dictConfig({"version": 1})
 my_logger = logging.getLogger(__name__)
 
 
@@ -42,10 +37,8 @@ def load_mmdc_path(
 ) -> pd.DataFrame:
     assert Path(path_dir).exists(), f"{path_dir} not found"
     list_available_sits = [
-        p
-        for p in Path(path_dir).rglob(
-            f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}"
-        )
+        p for p in Path(path_dir).rglob(
+            f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}")
     ]
     my_logger.debug(list_available_sits[0])
     my_logger.debug(f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}")
@@ -70,9 +63,8 @@ def load_mmdc_path(
     return final_df
 
 
-def build_dataframe(
-    path_dir, l_modality: list, s2_tile: list[str]
-) -> pd.DataFrame:
+def build_dataframe(path_dir, l_modality: list,
+                    s2_tile: list[str]) -> pd.DataFrame:
     l_mod_df = []
     for mod in l_modality:
         l_mod_df += [load_mmdc_path(path_dir, modality=mod, s2_tile=s2_tile)]
@@ -82,28 +74,26 @@ def build_dataframe(
 def build_dataset_info(
     path_dir: str,
     l_tile_s2: list[str],
-    list_modalities: list[
-        Literal[
-            "s2",
-            "s1_asc",
-            "s1_desc",
-            "dem",
-            "dew_temp",
-            "prec",
-            "sol_rad",
-            "temp_max",
-            "temp_mean",
-            "temp_min",
-            "val_press",
-            "wind_speed",
-        ]
-    ],
+    list_modalities: list[Literal[
+        "s2",
+        "s1_asc",
+        "s1_desc",
+        "dem",
+        "dew_temp",
+        "prec",
+        "sol_rad",
+        "temp_max",
+        "temp_mean",
+        "temp_min",
+        "val_press",
+        "wind_speed",
+    ]],
 ) -> MMDCDF:  # TODO deal with AGERA5 data
     d_mod = {}
     for mod in list_modalities:
-        d_mod[mod] = load_mmdc_path(
-            path_dir=path_dir, modality=mod, s2_tile=l_tile_s2
-        )
+        d_mod[mod] = load_mmdc_path(path_dir=path_dir,
+                                    modality=mod,
+                                    s2_tile=l_tile_s2)
     return MMDCDF(**d_mod)
 
 
@@ -115,7 +105,7 @@ def load_item_dataset_modality(
     mod_df: pd.DataFrame,
     item: int,
     drop_variable: Hashable | Iterable[Hashable] = None,
-    load_variables=None,
+    load_variables: list = None,
     s2_max_ccp: float | None = None,
 ) -> Dataset:
     my_logger.debug(f"item{item}")
@@ -130,27 +120,35 @@ def load_item_dataset_modality(
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
     dataset = xarray.open_mfdataset(path_im, combine="nested", decode_cf=False)
+    my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:
+        my_logger.debug(f"drop_var {drop_variable}")
         dataset = dataset.drop_vars(names=drop_variable)
     if load_variables:
-        dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
+        #        dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
         my_logger.debug(dataset)
-    my_logger.debug(list(dataset.data_vars))
+        my_logger.debug(load_variables)
+        dataset = dataset[list(load_variables)]
+
+    my_logger.debug(f"after {list(dataset.data_vars)}")
     if s2_max_ccp is not None:
+        my_logger.debug("max cc")
         max_pix_cc = dataset.sizes["x"] * s2_max_ccp
         ccp = dataset[["CLM"]].sum(dim=["x", "y"])
         ccp = ccp.compute()
         dataset = dataset.sel(
-            t=ccp.where(ccp["CLM"] < max_pix_cc, drop=True)["t"]
-        )
+            t=ccp.where(ccp["CLM"] < max_pix_cc, drop=True)["t"])
     return dataset
 
 
 def order_dataset_vars(dataset, list_vars_order=None):
+
     if list_vars_order is None:
         sorted_vars = sorted(dataset.data_vars)
+
     else:
         sorted_vars = list_vars_order
+
     return dataset[sorted_vars]
 
 

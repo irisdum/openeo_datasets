@@ -9,19 +9,17 @@ from openeo_mmdc.dataset.utils import (
     merge_agera5_datasets,
 )
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": True,
+})
 my_logger = logging.getLogger(__name__)
 
 
 def mmdc_sits(
     c_mmdc_df: MMDCDF,
     item,
-    s2_drop_variable: list["str"],
+    s2_drop_variable: list["str"] | None,
     s2_load_bands: list[str] | None,
     crop_size: int,
     crop_type: Literal["Center", "Random"],
@@ -56,6 +54,7 @@ def mmdc_sits(
         s2_load_bands = S2_BAND
     if s2_band_mask is None:
         s2_band_mask = CLD_MASK_BAND
+    my_logger.debug(f"opt {opt}")
     if opt in ("all", "s2"):
         s2_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s2,
@@ -64,19 +63,18 @@ def mmdc_sits(
             load_variables=s2_load_bands + s2_band_mask,
             s2_max_ccp=s2_max_ccp,
         )
+        my_logger.debug(f"band mask {s2_band_mask} bands {s2_load_bands}")
         out["s2"] = from_dataset2tensor(
             s2_dataset,
             max_len,
             crop_size=crop_size,
             crop_type=crop_type,
             transform=all_transform.s2.transform,
-            band_cld=s2_band_mask,
+            band_cld=list(s2_band_mask),
             load_variable=s2_load_bands,
             seed=seed,
         )
-        my_logger.debug(
-            f"out s2 arra{from_dataset2tensor(s2_dataset, max_len).sits.shape}"
-        )
+
     if opt in ("all", "s1"):
         s1_asc_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_asc, item=item
@@ -89,9 +87,8 @@ def mmdc_sits(
             transform=all_transform.s1_asc.transform,
             seed=seed,
         )
-        s1_des_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.s1_desc, item=item
-        )
+        s1_des_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.s1_desc,
+                                                    item=item)
         out["s1_desc"] = from_dataset2tensor(
             s1_des_dataset,
             max_len,
@@ -101,9 +98,8 @@ def mmdc_sits(
             seed=seed,
         )
     if opt == "all":
-        dem_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.dem, item=item
-        )
+        dem_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.dem,
+                                                 item=item)
         out["dem"] = from_dataset2tensor(
             dem_dataset,
             max_len,
