@@ -1,9 +1,13 @@
 import logging
 from typing import Literal
 
-from openeo_mmdc.constant.torch_dataloader import CLD_MASK_BAND, S2_BAND
-from openeo_mmdc.dataset.dataclass import MMDCDF, ItemTensorMMDC, ModTransform
-from openeo_mmdc.dataset.to_tensor import from_dataset2tensor
+from openeo_mmdc.constant.torch_dataloader import (
+    CLD_MASK_BAND,
+    S1_BAND,
+    S2_BAND,
+)
+from openeo_mmdc.dataset.dataclass import MMDCDF, ItemTensorMMDC
+from openeo_mmdc.dataset.to_tensor import light_from_dataset2tensor
 from openeo_mmdc.dataset.utils import (
     load_item_dataset_modality,
     merge_agera5_datasets,
@@ -12,19 +16,14 @@ from openeo_mmdc.dataset.utils import (
 my_logger = logging.getLogger(__name__)
 
 
-def mmdc_sits(
+def convert_to_tensor(
     c_mmdc_df: MMDCDF,
     item,
-    s2_drop_variable: list["str"],
-    s2_load_bands: list[str] | None,
-    crop_size: int,
-    crop_type: Literal["Center", "Random"],
-    max_len: int,
+    s2_drop_variable: list["str"] | None = None,
+    s2_load_bands: list[str] | None = None,
     opt: Literal["all", "s2", "s1", "sentinel"] = "all",
-    all_transform: None | ModTransform = None,
     s2_band_mask: list | None = None,
     s2_max_ccp: float | None = None,
-    seed: int | None = None,
 ) -> ItemTensorMMDC:
     """
 
@@ -58,53 +57,31 @@ def mmdc_sits(
             load_variables=s2_load_bands + s2_band_mask,
             s2_max_ccp=s2_max_ccp,
         )
-        out["s2"] = from_dataset2tensor(
+        out["s2"] = light_from_dataset2tensor(
             s2_dataset,
-            max_len,
-            crop_size=crop_size,
-            crop_type=crop_type,
-            transform=all_transform.s2.transform,
             band_cld=s2_band_mask,
             load_variable=s2_load_bands,
-            seed=seed,
         )
-        my_logger.debug(
-            f"out s2 arra{from_dataset2tensor(s2_dataset, max_len).sits.shape}"
-        )
+
     if opt in ("all", "s1"):
         s1_asc_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_asc, item=item
         )  # TODO maybe use drop_var depends if we want to keep the angle ...
-        out["s1_asc"] = from_dataset2tensor(
-            s1_asc_dataset,
-            max_len,
-            crop_size=crop_size,
-            crop_type=crop_type,
-            transform=all_transform.s1_asc.transform,
-            seed=seed,
+        out["s1_asc"] = light_from_dataset2tensor(
+            s1_asc_dataset, load_variable=S1_BAND
         )
         s1_des_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_desc, item=item
         )
-        out["s1_desc"] = from_dataset2tensor(
-            s1_des_dataset,
-            max_len,
-            crop_size=crop_size,
-            crop_type=crop_type,
-            transform=all_transform.s1_desc.transform,
-            seed=seed,
+        out["s1_desc"] = light_from_dataset2tensor(
+            s1_des_dataset, load_variable=S1_BAND
         )
     if opt == "all":
         dem_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.dem, item=item
         )
-        out["dem"] = from_dataset2tensor(
+        out["dem"] = light_from_dataset2tensor(
             dem_dataset,
-            max_len,
-            crop_size=crop_size,
-            crop_type=crop_type,
-            transform=all_transform.dem.transform,
-            seed=seed,
         )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
@@ -116,12 +93,6 @@ def mmdc_sits(
             c_mmdc_df.sol_rad,
             c_mmdc_df.val_press,
         ]
-        out["agera5"] = from_dataset2tensor(
-            merge_agera5_datasets(l_agera5_df, item),
-            max_len,
-            crop_size=crop_size,
-            crop_type=crop_type,
-            transform=all_transform.dem.transform,
-            seed=seed,
-        )
+        agera5dataset = merge_agera5_datasets(l_agera5_df, item)
+        out["agera5"] = light_from_dataset2tensor(agera5dataset)
     return ItemTensorMMDC(**out)

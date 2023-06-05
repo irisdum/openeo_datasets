@@ -49,3 +49,14 @@ S2_BAND = [
 CLD_MASK = "CLM"
 CLD_MASK_BAND = ["CLM", "SCL"]
 LOAD_VARIABLE = S2_BAND + [CLD_MASK]
+S1_BAND = ["VH", "VV"]
+AGERA_BAND = [
+    "dewpoint-temperature",
+    "precipitation-flux",
+    "solar-radiation-flux",
+    "temperature-max",
+    "temperature-mean",
+    "temperature-min",
+    "vapour-pressure",
+    "wind-speed",
+]

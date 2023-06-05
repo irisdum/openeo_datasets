@@ -4,14 +4,11 @@ from pathlib import Path
 from typing import Literal
 
 import pandas as pd
-import torch.nn
 import xarray
-from torch import Tensor
 from xarray import Dataset
 
 from openeo_mmdc.constant.torch_dataloader import D_MODALITY, FORMAT_SITS
 from openeo_mmdc.dataset.dataclass import MMDCDF
-from openeo_mmdc.dataset.to_tensor import from_dataset2tensor
 
 logging.config.dictConfig(
     {
@@ -63,7 +60,7 @@ def load_mmdc_path(
                 "s2_tile": tile,
                 "sits_path": l_s2,
             }
-            assert l_s2, f"No image found at {pattern}"
+            assert l_s2, f"No image found at {pattern} at {path_dir}"
             l_df += [pd.DataFrame([id_series])]
     my_logger.debug(l_df)
     final_df = pd.concat(l_df, ignore_index=True)
@@ -155,23 +152,10 @@ def order_dataset_vars(dataset, list_vars_order=None):
 
 
 def merge_agera5_datasets(
-    l_agera5_df: list[pd.DataFrame],
-    item: int,
-    max_len: int = 10,
-    crop_size=64,
-    crop_type: Literal["Center", "Random"] = "Center",
-    transform: None | torch.nn.Module = None,
-    seed=None,
-) -> (Tensor, Tensor):
+    l_agera5_df: list[pd.DataFrame], item: int
+) -> Dataset:
     l_dataset_agera5 = [
         load_item_dataset_modality(mod_df, item) for mod_df in l_agera5_df
     ]
     tot_array = xarray.merge(l_dataset_agera5)  # c,t,h,w
-    return from_dataset2tensor(
-        tot_array,
-        max_len=max_len,
-        crop_size=crop_size,
-        crop_type=crop_type,
-        transform=transform,
-        seed=seed,
-    )
+    return tot_array

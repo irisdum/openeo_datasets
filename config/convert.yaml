@@ -1,0 +1,5 @@
+directory: /media/dumeuri/DATA/Data/Iris/MMDC_OE
+mod_df: null
+ex_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/PT_FORMAT
+s2_tile: ["30TYR"]
+s2_max_ccp: 0.5

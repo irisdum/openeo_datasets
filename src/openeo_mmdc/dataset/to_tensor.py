@@ -29,9 +29,40 @@ logging.config.dictConfig(
 my_logger = logging.getLogger(__name__)
 
 
+def light_from_dataset2tensor(
+    dataset: xarray.Dataset,
+    band_cld: list | None = None,
+    load_variable: list | None = None,
+):
+    time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
+    time = time_info.values.astype(dtype="timedelta64[D]")
+    time = time.astype("int32")
+    if load_variable is not None:
+        spectral_dataset = dataset[load_variable]
+        if band_cld is not None:
+            cld_dataset = dataset[band_cld]
+    else:
+        spectral_dataset = dataset
+    sits = spectral_dataset.to_array()
+    sits = torch.Tensor(sits.values)
+    if band_cld is not None:
+        nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
+        cld_mask = torch.Tensor(cld_dataset[["CLM"]].to_array().values)
+        mask_sits = MaskMod(
+            mask_cld=cld_mask,
+            mask_nan=nan_mask,
+            mask_slc=torch.Tensor(cld_dataset[["SCL"]].to_array().values),
+        )
+        # print(f"mask cld {cld_mask[0,:,0,0]}")
+    else:
+        my_logger.debug("No cld mask applied")
+        mask_sits = MaskMod()
+    return OneMod(sits, torch.Tensor(time), mask=mask_sits)
+
+
 def from_dataset2tensor(
     dataset: xarray.Dataset,
-    max_len: int = 10,
+    max_len: int | None = 10,
     crop_size=64,
     crop_type: Literal["Center", "Random"] = "Center",
     transform=None,
@@ -42,8 +73,9 @@ def from_dataset2tensor(
     d_s = dataset.sizes
     if seed is not None:
         random.seed(seed)
-    temp_idx = sorted(random.sample([i for i in range(d_s["t"])], max_len))
-    dataset = dataset.isel({"t": temp_idx})
+    if max_len is not None:
+        temp_idx = sorted(random.sample([i for i in range(d_s["t"])], max_len))
+        dataset = dataset.isel({"t": temp_idx})
     time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
