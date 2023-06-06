@@ -37,14 +37,14 @@ class Clip(torch.nn.Module):
 
     def forward(self, tensor: Tensor) -> Tensor:
         my_logger.debug(tensor.shape)
-        if self.s2_partial:
-            tmp_tensor = tensor
-        else:
-            tmp_tensor = tensor
+
+        tmp_tensor = tensor
         assert len(tensor.shape) == 4
+        tmp_tensor[torch.isnan(tmp_tensor)] = torch.max(self.qmax) + 100
         tmp_tensor = torch.min(
             torch.max(tmp_tensor, self.qmin), self.qmax
         )  # clip values on the quantile
+
         return tmp_tensor
 
     def __repr__(self):
@@ -79,7 +79,7 @@ class S2Normalize(torch.nn.Module):
         else:
             tmp_tensor = tensor
         assert len(tensor.shape) == 4
-        my_logger.debug(tmp_tensor.shape, self.scale)
+
         tmp_tensor = self.transform(tmp_tensor)  # clip values on the quantile
         if self.s2_partial:
             tensor[:, : -(tensor.shape[1] - len(S2_BAND)), ...] = (

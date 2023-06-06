@@ -10,12 +10,7 @@ from xarray import Dataset
 from openeo_mmdc.constant.torch_dataloader import D_MODALITY, FORMAT_SITS
 from openeo_mmdc.dataset.dataclass import MMDCDF
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
+logging.config.dictConfig({"version": 1})
 my_logger = logging.getLogger(__name__)
 
 
@@ -112,7 +107,7 @@ def load_item_dataset_modality(
     mod_df: pd.DataFrame,
     item: int,
     drop_variable: Hashable | Iterable[Hashable] = None,
-    load_variables=None,
+    load_variables: list = None,
     s2_max_ccp: float | None = None,
 ) -> Dataset:
     my_logger.debug(f"item{item}")
@@ -126,14 +121,22 @@ def load_item_dataset_modality(
     # print(item_series["sits_path"])
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
-    dataset = xarray.open_mfdataset(path_im, combine="nested", decode_cf=False)
+    dataset = xarray.open_mfdataset(
+        path_im, combine="nested", decode_cf=False, chunks="auto"
+    )
+    my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:
+        my_logger.debug(f"drop_var {drop_variable}")
         dataset = dataset.drop_vars(names=drop_variable)
     if load_variables:
-        dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
+        #        dataset = order_dataset_vars(dataset, list_vars_order=load_variables)
         my_logger.debug(dataset)
-    my_logger.debug(list(dataset.data_vars))
+        my_logger.debug(load_variables)
+        dataset = dataset[load_variables.copy()]
+
+    my_logger.debug(f"after {list(dataset.data_vars)}")
     if s2_max_ccp is not None:
+        my_logger.debug("max cc")
         max_pix_cc = dataset.sizes["x"] * s2_max_ccp
         ccp = dataset[["CLM"]].sum(dim=["x", "y"])
         ccp = ccp.compute()
@@ -146,8 +149,10 @@ def load_item_dataset_modality(
 def order_dataset_vars(dataset, list_vars_order=None):
     if list_vars_order is None:
         sorted_vars = sorted(dataset.data_vars)
+
     else:
         sorted_vars = list_vars_order
+
     return dataset[sorted_vars]
 
 
