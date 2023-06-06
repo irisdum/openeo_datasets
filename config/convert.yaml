@@ -1,5 +1,5 @@
 directory: /home/ad/dumeuri/scratch/datasets/MMDC_OE/val
 mod_df: null
-ex_dir: /home/ad/dumeuri/scratch/datasets/MMDC_OE/val/PT_FORMAT
-s2_tile: ["30TYR"]
+ex_dir: /home/ad/dumeuri/scratch/datasets/MMDC_OE/PT_FORMAT/val
+s2_tile: ["30TYR","31TEK","33TXK","34UDB"]
 s2_max_ccp: 0.5

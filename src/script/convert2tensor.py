@@ -12,15 +12,29 @@ my_logger = logging.getLogger(__name__)
 
 def save_per_mod(mods: list, mmdc_sits, ex_dir: str, suffix: str):
     for mod in mods:
-        if "s2" in mods:
+        if mod == "s2":
             torch.save(mmdc_sits.s2,
                        Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+        elif "s1_asc" == mod:
+            torch.save(mmdc_sits.s1_asc,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+        elif "s1_desc" == mod:
+            torch.save(mmdc_sits.s1_desc,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+        elif "dem" == mod:
+            torch.save(mmdc_sits.dem,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+        elif "agera5" == mod:
+            torch.save(mmdc_sits.agera5,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+        else:
+            raise NotImplementedError(mod)
 
 
 @hydra.main(config_path="../../config/", config_name="convert.yaml")
 def main(config):
     directory = config.directory
-    Path(config.ex_dir).mkdir(exist_ok=True)
+    Path(config.ex_dir).mkdir(exist_ok=True, parents=True)
     if config.mod_df is None:
         mod_df = [
             "s2",
@@ -57,7 +71,7 @@ def main(config):
                                               item,
                                               s2_max_ccp=config.s2_max_ccp,
                                               opt="all")
-            save_per_mod(mods=["s2"],
+            save_per_mod(mods=["s2", "s1_asc", "s1_desc", "dem", "agera5"],
                          mmdc_sits=out_transform,
                          ex_dir=Path(config.ex_dir).joinpath(tile),
                          suffix=f"Patch_item{item}_id_{patch_id}")
