@@ -10,7 +10,6 @@ from xarray import Dataset
 from openeo_mmdc.constant.torch_dataloader import D_MODALITY, FORMAT_SITS
 from openeo_mmdc.dataset.dataclass import MMDCDF
 
-logging.config.dictConfig({"version": 1})
 my_logger = logging.getLogger(__name__)
 
 

@@ -115,8 +115,10 @@ def from_dataset2tensor(
     return OneMod(sits, torch.Tensor(time), mask=mask_sits)
 
 
-def crop_tensor(tensor: DataArray, x, y, crop_size) -> DataArray:
-    return tensor[:, :, x : x + crop_size, y : y + crop_size]
+def crop_tensor(
+    tensor: DataArray | Tensor, x, y, crop_size
+) -> DataArray | Tensor:
+    return tensor[..., x : x + crop_size, y : y + crop_size]
 
 
 def crop_dataset(dataset: Dataset, x, y, crop_size) -> Tensor:
