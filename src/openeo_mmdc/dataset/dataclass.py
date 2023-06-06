@@ -70,10 +70,42 @@ class MMDCDF:
 
 
 @dataclass
+class PT_MMDC_DF:
+    s2: pd.DataFrame | None = None
+    s1_asc: pd.DataFrame | None = None
+    s1_desc: pd.DataFrame | None = None
+    dem: pd.DataFrame | None = None
+    agera5: pd.DataFrame | None = None
+
+    def __len__(self):
+        if self.s2 is not None:
+            return len(self.s2)
+        elif self.s1_asc is not None:
+            return len(self.s1_asc)
+        elif self.s1_desc is not None:
+            return len(self.s1_desc)
+        elif self.dem is not None:
+            return len(self.dem)
+        elif self.agera5 is not None:
+            return len(self.agera5)
+        else:
+            my_logger.info("No dataframe found ")
+            return None
+
+
+@dataclass
 class Stats:
     median: list
     qmin: list
     qmax: list
+
+
+@dataclass
+class MMDC_MAXLEN:
+    s2: int | None = None
+    s1_asc: int | None = None
+    s1_desc: int | None = None
+    agera5: int | None = None
 
 
 @dataclass
