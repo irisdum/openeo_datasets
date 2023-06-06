@@ -76,7 +76,7 @@ class S2Normalize(torch.nn.Module):
         else:
             tmp_tensor = tensor
         assert len(tensor.shape) == 4
-        my_logger.debug(tmp_tensor.shape, self.scale)
+
         tmp_tensor = self.transform(tmp_tensor)  # clip values on the quantile
         if self.s2_partial:
             tensor[:, :-(tensor.shape[1] - len(S2_BAND)), ...] = (

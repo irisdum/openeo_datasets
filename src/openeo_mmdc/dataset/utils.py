@@ -119,7 +119,10 @@ def load_item_dataset_modality(
     # print(item_series["sits_path"])
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
-    dataset = xarray.open_mfdataset(path_im, combine="nested", decode_cf=False)
+    dataset = xarray.open_mfdataset(path_im,
+                                    combine="nested",
+                                    decode_cf=False,
+                                    chunks="auto")
     my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:
         my_logger.debug(f"drop_var {drop_variable}")

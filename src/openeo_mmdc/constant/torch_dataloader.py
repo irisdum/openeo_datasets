@@ -1,4 +1,4 @@
-,AGERA_DATA = [
+AGERA_DATA = [
     "DEW_TEMP",
     "PREC",
     "SOL_RAD",
@@ -25,10 +25,9 @@ L_MOD_MMDC = [
 D_MODALITY = dict(
     zip(
         L_MOD_MMDC,
-        ["Sentinel2", "Sentinel1_ASCENDING", "Sentinel1_DESCENDING", "DEM"]
-        + AGERA_DATA,
-    )
-)
+        ["Sentinel2", "Sentinel1_ASCENDING", "Sentinel1_DESCENDING", "DEM"] +
+        AGERA_DATA,
+    ))
 
 S2_TILE = ["31TEK"]
 FORMAT_SITS = "clip.nc"

@@ -45,12 +45,10 @@ def from_dataset2tensor(
     if load_variable is not None:
         my_logger.debug(load_variable)
         spectral_dataset = dataset[list(load_variable)]
-        my_logger.info(band_cld)
+        my_logger.debug(band_cld)
         if band_cld is not None:
             cld_dataset = dataset[band_cld]
-            my_logger.info(f"cld band used now{band_cld}")
-        else:
-            my_logger.info(f"cld band not used {band_cld}")
+
     else:
 
         spectral_dataset = dataset
