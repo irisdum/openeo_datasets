@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import dask
 import hydra
 import torch
 
@@ -31,6 +32,31 @@ def save_per_mod(mods: list, mmdc_sits, ex_dir: str, suffix: str):
             raise NotImplementedError(mod)
 
 
+@dask.delayed
+def convert(c_mmdc_df, config, item, mod_df):
+    item_series = c_mmdc_df.s2.iloc[item]
+    tile = item_series["s2_tile"]
+    patch_id = item_series["patch_id"][:-3]
+    ex_path = Path(config.ex_dir).joinpath(
+        f"{tile}/Patch_item{item}_id_{patch_id}_{mod_df[0]}.pt")
+    if not ex_path.exists():
+        Path(config.ex_dir).joinpath(tile).mkdir(exist_ok=True)
+        out_transform = convert_to_tensor(c_mmdc_df,
+                                          item,
+                                          s2_max_ccp=config.s2_max_ccp,
+                                          opt="all")
+        save_per_mod(mods=["s2", "s1_asc", "s1_desc", "dem", "agera5"],
+                     mmdc_sits=out_transform,
+                     ex_dir=Path(config.ex_dir).joinpath(tile),
+                     suffix=f"Patch_id_{patch_id}")
+        #torch.save(out_transform, ex_path)
+
+        my_logger.info(f"Create {ex_path}")
+    else:
+        my_logger.info(f"We have already created tensor {ex_path}")
+    return item
+
+
 @hydra.main(config_path="../../config/", config_name="convert.yaml")
 def main(config):
     directory = config.directory
@@ -59,27 +85,16 @@ def main(config):
         c_mmdc_df,
         Path(config.ex_dir).joinpath("tiles_descriptions.pt"),
     )
+    l_out = [
+        convert(c_mmdc_df, config, item, mod_df)
+        for item in range(len(c_mmdc_df.s2))
+    ]
+    res_item = []
     for item in range(len(c_mmdc_df.s2)):
-        item_series = c_mmdc_df.s2.iloc[item]
-        tile = item_series["s2_tile"]
-        patch_id = item_series["patch_id"][:-3]
-        ex_path = Path(config.ex_dir).joinpath(
-            f"{tile}/Patch_item{item}_id_{patch_id}_{mod_df[0]}.pt")
-        if not ex_path.exists():
-            Path(config.ex_dir).joinpath(tile).mkdir(exist_ok=True)
-            out_transform = convert_to_tensor(c_mmdc_df,
-                                              item,
-                                              s2_max_ccp=config.s2_max_ccp,
-                                              opt="all")
-            save_per_mod(mods=["s2", "s1_asc", "s1_desc", "dem", "agera5"],
-                         mmdc_sits=out_transform,
-                         ex_dir=Path(config.ex_dir).joinpath(tile),
-                         suffix=f"Patch_item{item}_id_{patch_id}")
-            #torch.save(out_transform, ex_path)
-
-            my_logger.info(f"Create {ex_path}")
-        else:
-            my_logger.info(f"We have already created tensor {ex_path}")
+        item_out = dask.delayed(convert)(c_mmdc_df, config, item, mod_df)
+        res_item.append(item_out)
+    results = dask.compute(*res_item)
+    return results
 
 
 if __name__ == "__main__":
