@@ -11,9 +11,9 @@ PATH_DATASET_PT = "/home/ad/dumeuri/scratch/datasets/MMDC_OE/val/PT_FORMAT"
 
 @pytest.mark.hal
 def test_load_mmdc_sits():
-    df = create_mmcd_tensor_df(path_directory=PATH_DATASET_PT,
-                               s2_tile=["30TYR"],
-                               modalities=["s2"])
+    df = create_mmcd_tensor_df(
+        path_directory=PATH_DATASET_PT, s2_tile=["30TYR"], modalities=["s2"]
+    )
     item = 0
     out_mmdc_item = load_mmdc_sits(
         c_mmdc_df=df,
@@ -25,8 +25,9 @@ def test_load_mmdc_sits():
         all_transform=None,
         seed=1,
     )
-    assert len(
-        out_mmdc_item.s2.sits.shape) == 4, f"len {out_mmdc_item.s2.sits.shape}"
+    assert (
+        len(out_mmdc_item.s2.sits.shape) == 4
+    ), f"len {out_mmdc_item.s2.sits.shape}"
     assert out_mmdc_item.s2.doy.shape[0] == 20
     assert out_mmdc_item.s2.sits.shape[1] == 20
 

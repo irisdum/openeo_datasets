@@ -58,60 +58,71 @@ def main(config: DictConfig):
             print(feat)
             features = json.load(feat)
     # print(features)
+    if config.opt in ("all", "s2"):
+        run_s2 = True
+    else:
+        run_s2 = False
     output_s2 = download_s2(
         c,
         features=features,
         tile=tile,
         temporal_extent=TIMERANGE,
         year=year,
-        run=True,
+        run=run_s2,
         max_cc=config.max_cc,
     )
-    download_s1(
-        c,
-        collection_s2=output_s2.collection,
-        orbit="ASCENDING",
-        features=features,
-        tile=tile,
-        temporal_extent=TIMERANGE,
-        year=year,
-    )
-    download_s1(
-        c,
-        collection_s2=output_s2.collection,
-        orbit="DESCENDING",
-        features=features,
-        tile=tile,
-        temporal_extent=TIMERANGE,
-        year=year,
-    )
-    agera5_bands = [
-        "dewpoint-temperature",
-        "precipitation-flux",
-        "solar-radiation-flux",
-        "temperature-max",
-        "temperature-mean",
-        "temperature-min",
-        "vapour-pressure",
-        "wind-speed",
-    ]
-    for b in agera5_bands:
-        download_agora_per_band(
+    if config.opt in ("all", "s1_asc"):
+        download_s1(
             c,
             collection_s2=output_s2.collection,
+            orbit="ASCENDING",
             features=features,
             tile=tile,
             temporal_extent=TIMERANGE,
             year=year,
-            bands=[b],
         )
-    download_dem(
-        c,
-        collection_s2=output_s2.collection,
-        features=features,
-        tile=tile,
-        year=year,
-    )
+    if config.opt in ("all", "s1_desc"):
+        download_s1(
+            c,
+            collection_s2=output_s2.collection,
+            orbit="DESCENDING",
+            features=features,
+            tile=tile,
+            temporal_extent=TIMERANGE,
+            year=year,
+        )
+    if config.opt in ("all", "dem"):
+        download_dem(
+            c,
+            collection_s2=output_s2.collection,
+            features=features,
+            tile=tile,
+            year=year,
+        )
+    if config.opt in ("all", "agera5"):
+        if config.agera_band is None:
+            agera5_bands = [
+                "dewpoint-temperature",
+                "precipitation-flux",
+                "solar-radiation-flux",
+                "temperature-max",
+                "temperature-mean",
+                "temperature-min",
+                "vapour-pressure",
+                "wind-speed",
+            ]
+        else:
+            agera5_bands = config.agera_band
+        for b in agera5_bands:
+            download_agora_per_band(
+                c,
+                collection_s2=output_s2.collection,
+                features=features,
+                tile=tile,
+                temporal_extent=TIMERANGE,
+                year=year,
+                bands=[b],
+            )
 
 
 if __name__ == "__main__":

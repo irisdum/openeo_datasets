@@ -5,7 +5,8 @@ defaults:
 
 
 where: local
-path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230605.csv
+path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230614.csv
+list_id: null #[vito-j-0da04cc86d0242a2943ec918f57cf512,vito-j-f1b6619adc7f4aad826a1ddc8dbbc1a2,vito-j-d9d536aaf520441494a1a46dd24456c1] #null #[vito-j-dbdf8b8515684d45a9e8e13cf19d387a,]
 ex_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/
 
 hydra:

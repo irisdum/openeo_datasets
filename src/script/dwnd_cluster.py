@@ -59,6 +59,37 @@ def extract_suffix(dict_metadata: dict):
     return dict_metadata["properties"]["title"]
 
 
+def dwnd_res(res, ex_dir: str):
+    dict_metadata = res.get_metadata()
+    print(dict_metadata.keys())
+    year = extract_time(dict_metadata)
+    tile = extracts2_tile(dict_metadata)
+    suffix = extract_suffix(dict_metadata)
+    assets_metadata = dict_metadata["assets"]
+    print(assets_metadata.keys())
+    sub_dir = sub_dir_name(suffix=suffix, tile=tile, year=year)
+    print(sub_dir)
+    # creating a new directory called pythondirectory
+    out_dir = os.path.join(ex_dir, sub_dir)
+    if not Path(out_dir).is_dir():
+        print(out_dir)
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+    l_out = []
+    for roi in assets_metadata.keys():
+        print(roi)
+        if not Path(os.path.join(out_dir, roi)).exists():
+            l_out += [
+                dask.delayed(dwnd_file)(
+                    assets_metadata[roi]["href"],
+                    ex_dir=out_dir,
+                    roi=roi,
+                )
+            ]
+        else:
+            print(f"file {roi} exists")
+    return l_out
+
+
 @hydra.main(config_path="../../config/", config_name="dwnd.yaml")
 def main(config: DictConfig):
     """
@@ -78,41 +109,26 @@ def main(config: DictConfig):
     c.authenticate_oidc()
     Client(threads_per_worker=4, n_workers=1)
     ex_dir = config.ex_dir
-    list_id = open_job_df(config.path_csv)
+    if config.list_id is None:
+        list_id = open_job_df(config.path_csv)
+    else:
+        list_id = config.list_id
+    l_out = []
     for job_id in list_id:
         res = c.job(job_id).get_results()
         try:
-            dict_metadata = res.get_metadata()
-            print(dict_metadata.keys())
-            year = extract_time(dict_metadata)
-            tile = extracts2_tile(dict_metadata)
-            suffix = extract_suffix(dict_metadata)
-            assets_metadata = dict_metadata["assets"]
-            sub_dir = sub_dir_name(suffix=suffix, tile=tile, year=year)
-            print(sub_dir)
-            # creating a new directory called pythondirectory
-            out_dir = os.path.join(ex_dir, sub_dir)
-            if not Path(out_dir).is_dir():
-                print(out_dir)
-                Path(out_dir).mkdir(parents=True, exist_ok=True)
-            l_out = []
-            for roi in assets_metadata.keys():
-                print(roi)
-                if not Path(os.path.join(out_dir, roi)).exists():
-                    l_out += [
-                        dask.delayed(
-                            dwnd_file(
-                                assets_metadata[roi]["href"],
-                                ex_dir=out_dir,
-                                roi=roi,
-                            )
-                        )
-                    ]
-                else:
-                    print(f"file {roi} exists")
-                dask.compute(*l_out)
+            l_out += dwnd_res(res, ex_dir)
+
         except openeo.rest.OpenEoApiError:
-            print(f"OPenAI rest error {res} ")
+            if job_id[0] != "v":  # TODO hard fix not sure correct
+                job_id = "vito-" + job_id
+            try:
+                res = c.job(job_id).get_results()
+                l_out += dwnd_res(res, ex_dir)
+
+            except openeo.rest.OpenEoApiError:
+                print(f"OPenEo AI rest error {res} ")
+    dask.compute(*l_out)
 
 
 if __name__ == "__main__":

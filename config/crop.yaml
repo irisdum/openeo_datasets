@@ -5,7 +5,7 @@ defaults:
 
 path_geojson: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
 path_global_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/
-s2_tile: 31TEN
+s2_tile: 33UXR
 max_cc: null
 hydra:
   output_subdir: null

@@ -82,8 +82,8 @@ def download_s2(
         properties={"provider:backend": lambda v: v == "vito"},
     )
     job_options = {
-        "executor-memory": "6G",
-        "executor-memoryOverhead": "12G",  # default 2G
+        "executor-memory": "8G",
+        "executor-memoryOverhead": "16G",  # default 2G
         "executor-cores": 2,
         "task-cpus": 1,
         "executor-request-cores": "400m",

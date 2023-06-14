@@ -6,7 +6,9 @@ defaults:
 year: 2017
 pattern: pretrain_train*.geojson
 geojson_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
-id: 4
+id: 6
+opt: s2
+agera_band: null
 max_cc: 100
 
 hydra:

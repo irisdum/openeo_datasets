@@ -61,6 +61,7 @@ The main script is `crop_data.py `and its configuration file is `crop.yaml`.
 # Open the MMDC dataset as torch tensor
 To open the SITS previously downloaded thanks to this script, you can use the `mmdc_sits` function defined in
 `src/openeo_mmdc/dataset/load.py`.
+
 # Conversion to pytorch Tensor
 As openmf_files function is really slow, it slows the training process. Therefore we propose a script to convert the satellite image time series
 in netcdf format to pytorch format (".pt"). The object saved is a class which has an attribute for each modalities.
@@ -68,3 +69,4 @@ For each modalities is stored :
 - The reflectances (sits)
 - The acquisition date as the difference in days with the reference_date
 - (Optional) Acquisition mask
+It is also possible to precise for s2 data the maximum cloud cover allowed in the patch.

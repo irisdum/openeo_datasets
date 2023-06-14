@@ -37,22 +37,24 @@ def create_mmcd_tensor_df(
     return PT_MMDC_DF(**out_mod)
 
 
-def create_mod_df_tensor(path_dir: str,
-                         s2_tile,
-                         modality: str,
-                         format=".pt") -> pd.DataFrame:
+def create_mod_df_tensor(
+    path_dir: str, s2_tile, modality: str, format=".pt"
+) -> pd.DataFrame:
     assert Path(path_dir).exists(), f"{path_dir} not found"
     print(modality)
     l_df = []
     for tile in s2_tile:
         pattern = f"{tile}/*{modality}{format}"
-        l_s2 = [p
-                for p in Path(path_dir).rglob(pattern)]  # extract all s2 tiles
+        l_s2 = [
+            p for p in Path(path_dir).rglob(pattern)
+        ]  # extract all s2 tiles
         l_df += [
             pd.DataFrame(
-                create_dict_one_sits(path_sits=path,
-                                     mod=modality,
-                                     s2_tile=tile)) for path in l_s2
+                create_dict_one_sits(
+                    path_sits=path, mod=modality, s2_tile=tile
+                )
+            )
+            for path in l_s2
         ]
         assert l_s2, f"No image found at {pattern} at {path_dir}"
     my_logger.debug(l_df)
@@ -63,17 +65,20 @@ def create_mod_df_tensor(path_dir: str,
 
 def create_dict_one_sits(path_sits: Path, mod: str, s2_tile: str):
     patch_id = path_sits.name.split("openEO_")[-1][:2]
-    return [{
-        "mod": mod,
-        "patch_id": patch_id,
-        "s2_tile": s2_tile,
-        "sits_path": path_sits,
-    }]
+    return [
+        {
+            "mod": mod,
+            "patch_id": patch_id,
+            "s2_tile": s2_tile,
+            "sits_path": path_sits,
+        }
+    ]
 
 
 def crop_spat_temp(tensor: Tensor, x: int, y: int, crop_size: int, list_t):
-    assert (len(
-        tensor.shape) == 4), f"expected tensor type c,t,h,w got {tensor.shape}"
+    assert (
+        len(tensor.shape) == 4
+    ), f"expected tensor type c,t,h,w got {tensor.shape}"
     cropped_tensor = crop_tensor(tensor, x, y, crop_size)
     if list_t is not None:
         return cropped_tensor[:, list_t, ...]
@@ -159,17 +164,15 @@ def load_sits(
     if transform:
         sits_obj.sits = transform(sits_obj.sits)
     row, col = shape_sits[-1], shape_sits[-2]
-    x, y = get_crop_idx(rows=row,
-                        cols=col,
-                        crop_size=crop_size,
-                        crop_type=crop_type)
+    x, y = get_crop_idx(
+        rows=row, cols=col, crop_size=crop_size, crop_type=crop_type
+    )
     if seed is not None:
         random.seed(seed)
-
     if max_len is not None:
-
         temp_idx = sorted(
-            random.sample([i for i in range(shape_sits[1])], max_len))
+            random.sample([i for i in range(shape_sits[1])], max_len)
+        )
         if max_len > shape_sits[1]:
             raise NotImplementedError("Do not deal with temporal padding yet ")
     else:
@@ -178,15 +181,18 @@ def load_sits(
     my_logger.debug(sits_obj.mask.mask_cld.shape)
     my_logger.debug(sits_obj.mask.mask_nan[None, ...].shape)
 
-    crop_mask_cld = crop_spat_temp(sits_obj.mask.mask_cld, x, y, crop_size,
-                                   temp_idx)
-    crop_mask_scl = crop_spat_temp(sits_obj.mask.mask_slc, x, y, crop_size,
-                                   temp_idx)
+    crop_mask_cld = crop_spat_temp(
+        sits_obj.mask.mask_cld, x, y, crop_size, temp_idx
+    )
+    crop_mask_scl = crop_spat_temp(
+        sits_obj.mask.mask_slc, x, y, crop_size, temp_idx
+    )
 
-    crop_nan_mask = crop_spat_temp(sits_obj.mask.mask_nan[None, ...], x, y,
-                                   crop_size, temp_idx)
-    cropped_mask = MaskMod(mask_cld=crop_mask_cld,
-                           mask_slc=crop_mask_scl,
-                           mask_nan=crop_nan_mask)
+    crop_nan_mask = crop_spat_temp(
+        sits_obj.mask.mask_nan[None, ...], x, y, crop_size, temp_idx
+    )
+    cropped_mask = MaskMod(
+        mask_cld=crop_mask_cld, mask_slc=crop_mask_scl, mask_nan=crop_nan_mask
+    )
     temp_cropped_doy = sits_obj.doy[temp_idx]
     return OneMod(sits=crop_sits, doy=temp_cropped_doy, mask=cropped_mask)
