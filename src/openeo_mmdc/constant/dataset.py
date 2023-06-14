@@ -55,14 +55,10 @@ OUTDIR = Path("/home/ad/dumeuri/DeepChange/MMDC_OE/val")
 
 FEATURES_TRAIN = sorted(
     Path("/home/ad/dumeuri/code/openeo_datasets/geojson").rglob(
-        pattern="pretrain_train*.geojson"
-    )
-)
+        pattern="pretrain_train*.geojson"))
 FEATURES_VAL = sorted(
     Path("/home/dumeuri/Documents/dataset/datacubes/geojson").rglob(
-        pattern="pretrain_val*.geojson"
-    )
-)
+        pattern="pretrain_val*.geojson"))
 D_AGERA5_BAND_NAME = dict(
     zip(
         [
@@ -85,7 +81,7 @@ D_AGERA5_BAND_NAME = dict(
             "VAP_PRESS",
             "WIND_SPEED",
         ],
-    )
-)
+    ))
 
 REF_DATE = "2014-03-03"
+TUPLE_REF_DATE = (2014, 3, 3)
