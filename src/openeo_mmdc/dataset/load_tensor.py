@@ -99,6 +99,8 @@ def load_mmdc_sits(
     if all_transform is None:
         all_transform = ModTransform()
     if opt in ("all", "s2"):
+        temp_seed = seed + 0 if (seed is not None) else None
+
         out["s2"] = load_sits(
             c_mmdc_df.s2,
             item=item,
@@ -106,9 +108,10 @@ def load_mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             max_len=max_len.s2,
-            seed=seed + 0,
+            seed=temp_seed,
         )
     if opt in ("s1", "all"):
+        temp_seed = seed + 1 if (seed is not None) else None
         out["s1_asc"] = load_sits(
             c_mmdc_df.s1_asc,
             item=item,
@@ -116,7 +119,7 @@ def load_mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             max_len=max_len.s1_asc,
-            seed=seed + 1,
+            seed=temp_seed,
         )
         out["s1_desc"] = load_sits(
             c_mmdc_df.s1_desc,
@@ -125,9 +128,10 @@ def load_mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             max_len=max_len.s1_desc,
-            seed=seed + 2,
+            seed=temp_seed,
         )
     if opt == "all":
+        temp_seed_dem = seed + 3 if (seed is not None) else None
         out["dem"] = load_sits(
             c_mmdc_df.dem,
             item=item,
@@ -135,8 +139,9 @@ def load_mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             max_len=None,
-            seed=seed + 3,
+            seed=temp_seed_dem,
         )
+        temp_seed = seed + 4 if (seed is not None) else None
         out["agera5"] = load_sits(
             c_mmdc_df.agera5,
             item=item,
@@ -144,7 +149,7 @@ def load_mmdc_sits(
             crop_size=crop_size,
             crop_type=crop_type,
             max_len=max_len.agera5,
-            seed=seed + 4,
+            seed=temp_seed,
         )
     return ItemTensorMMDC(**out)
 

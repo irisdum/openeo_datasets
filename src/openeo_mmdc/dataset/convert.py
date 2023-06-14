@@ -67,22 +67,17 @@ def convert_to_tensor(
         s1_asc_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_asc, item=item
         )  # TODO maybe use drop_var depends if we want to keep the angle ...
-        out["s1_asc"] = light_from_dataset2tensor(
-            s1_asc_dataset, load_variable=S1_BAND
-        )
-        s1_des_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.s1_desc, item=item
-        )
-        out["s1_desc"] = light_from_dataset2tensor(
-            s1_des_dataset, load_variable=S1_BAND
-        )
+        out["s1_asc"] = light_from_dataset2tensor(s1_asc_dataset,
+                                                  load_variable=S1_BAND)
+        s1_des_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.s1_desc,
+                                                    item=item)
+        out["s1_desc"] = light_from_dataset2tensor(s1_des_dataset,
+                                                   load_variable=S1_BAND)
     if opt == "all":
-        dem_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.dem, item=item
-        )
-        out["dem"] = light_from_dataset2tensor(
-            dem_dataset,
-        )
+        dem_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.dem,
+                                                 item=item,
+                                                 s2_max_ccp=None)
+        out["dem"] = light_from_dataset2tensor(dem_dataset, )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
             c_mmdc_df.temp_max,
