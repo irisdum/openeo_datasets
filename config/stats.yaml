@@ -1,0 +1,7 @@
+s2_tiles: [31TEN, 31TDL]
+path_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/train
+mod: s2
+crop_size: 64
+qmin: 0.05
+qmax: 0.95
+ex_dir: /home/ad/dumeuri/DeepChange/MMDC_OE
