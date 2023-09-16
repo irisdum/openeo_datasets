@@ -75,13 +75,27 @@ def create_dict_one_sits(path_sits: Path, mod: str, s2_tile: str):
     ]
 
 
-def crop_spat_temp(tensor: Tensor, x: int, y: int, crop_size: int, list_t):
+def crop_spat_temp(
+    tensor: Tensor,
+    x: int,
+    y: int,
+    crop_size: int,
+    list_t,
+    padding_val: int = 0,
+):
     assert (
         len(tensor.shape) == 4
     ), f"expected tensor type c,t,h,w got {tensor.shape}"
     cropped_tensor = crop_tensor(tensor, x, y, crop_size)
+
     if list_t is not None:
-        return cropped_tensor[:, list_t, ...]
+        cropped_tensor = cropped_tensor[:, list_t, ...]
+    if padding_val:
+        my_logger.debug(f"Apply padding of dim {padding_val}")
+        padd_shape = list(cropped_tensor.shape)
+        padd_shape[1] = padding_val
+        padd_zeros = torch.zeros(tuple(padd_shape))
+        cropped_tensor = torch.cat([cropped_tensor, padd_zeros], 1)
     return cropped_tensor
 
 
@@ -179,9 +193,15 @@ def load_sits(
             random.sample([i for i in range(shape_sits[1])], max_len)
         )
         if max_len > shape_sits[1]:
-            raise NotImplementedError("Do not deal with temporal padding yet ")
+            my_logger.debug(
+                f"sits temporal dim {shape_sits[1]} is lower than max len"
+                f" {max_len}"
+            )
+            temp_idx = [i for i in range(max_len)]
+
     else:
         temp_idx = None
+
     crop_sits = crop_spat_temp(sits_obj.sits, x, y, crop_size, temp_idx)
     my_logger.debug(sits_obj.mask.mask_cld.shape)
     my_logger.debug(sits_obj.mask.mask_nan[None, ...].shape)
@@ -196,8 +216,13 @@ def load_sits(
     crop_nan_mask = crop_spat_temp(
         sits_obj.mask.mask_nan[None, ...], x, y, crop_size, temp_idx
     )
+    # padd_mask=crop_spat_temp(torch.ones(shape_sits),x,y,crop_size,temp_idx)
     cropped_mask = MaskMod(
-        mask_cld=crop_mask_cld, mask_slc=crop_mask_scl, mask_nan=crop_nan_mask
+        mask_cld=crop_mask_cld,
+        mask_slc=crop_mask_scl,
+        mask_nan=crop_nan_mask,  # ,padd_mask=padd_mask.bool()
     )
     temp_cropped_doy = sits_obj.doy[temp_idx]
+    # if padding_val>0:
+    #     temp_cropped_doy=F.pad(temp_cropped_doy,(padding_val,1))
     return OneMod(sits=crop_sits, doy=temp_cropped_doy, mask=cropped_mask)
