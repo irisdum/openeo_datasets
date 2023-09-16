@@ -1,19 +1,15 @@
-import logging.config
+import logging
 import random
 from pathlib import Path
 
 import pandas as pd
 import xarray
+from dask.diagnostics import ProgressBar
+from distributed import Client
 
 from openeo_mmdc.constant.torch_dataloader import S2_BAND
 from openeo_mmdc.dataset.utils import order_dataset_vars
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
 my_logger = logging.getLogger(__name__)
 
 
@@ -30,14 +26,18 @@ def compute_stats_one_mod(
     idx_file = random.sample([i for i in range(len(list_all_files))], max_img)
     l_open_file = [list_all_files[idx] for idx in idx_file]
     my_logger.info(l_open_file)
-    global_dataset = xarray.open_mfdataset(
-        l_open_file, combine="nested", decode_cf=False
-    )
+    global_dataset = xarray.open_mfdataset(l_open_file,
+                                           decode_cf=False,
+                                           chunks={
+                                               't': "500MB",
+                                               'x': "500MB",
+                                               'y': "500MB"
+                                           },
+                                           cache=False)
     my_logger.info(global_dataset)
 
-    global_dataset = order_dataset_vars(
-        global_dataset, list_vars_order=band_list
-    )
+    global_dataset = order_dataset_vars(global_dataset,
+                                        list_vars_order=band_list)
     # print(global_dataset)
     array = global_dataset.to_array()
     # array=array.stack(z=('t','x','y'))
@@ -60,7 +60,11 @@ def compute_stats_one_mod(
 
 
 if __name__ == "__main__":
-    PATH_DIR = "/media/dumeuri/DATA/Data/Iris/MMDC_OE"
-    compute_stats_one_mod(
-        path_dir=PATH_DIR, ex_dir=PATH_DIR, mod="Sentinel2", band_list=S2_BAND
-    )
+    PATH_DIR = "/home/ad/dumeuri/DeepChange/MMDC_OE/train/"
+
+    client = Client(n_workers=1)
+    compute_stats_one_mod(path_dir=PATH_DIR,
+                          ex_dir=PATH_DIR,
+                          mod="Sentinel2",
+                          band_list=S2_BAND,
+                          max_img=10)
