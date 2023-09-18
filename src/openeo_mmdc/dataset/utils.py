@@ -118,7 +118,8 @@ def load_item_dataset_modality(
     dataset = xarray.open_mfdataset(path_im,
                                     combine="nested",
                                     decode_cf=False,
-                                    chunks="auto")
+                                    chunks="auto",
+                                    engine='h5netcdf')
     my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:
         my_logger.debug(f"drop_var {drop_variable}")
