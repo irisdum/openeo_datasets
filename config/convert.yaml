@@ -4,3 +4,5 @@ ex_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/PT_FORMAT_2/train
 s2_tile: ["31TDL","31TEN","32UQD","33UXR","34TFR"] # ["30TYR","31TEK","32TNR","32UPC","33TXK","34UDB"] 
 s2_max_ccp: 0.5
 opt: s2
+crop_size: 128
+
