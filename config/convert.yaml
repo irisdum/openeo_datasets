@@ -3,3 +3,4 @@ mod_df: null
 ex_dir: /home/ad/dumeuri/scratch/datasets/MMDC_OE/PT_FORMAT_2/val
 s2_tile: ["30TYR","31TEK","33TXK","34UDB"]
 s2_max_ccp: 0.5
+crop_size: 128
