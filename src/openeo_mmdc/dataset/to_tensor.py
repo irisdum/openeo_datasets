@@ -28,7 +28,7 @@ def light_from_dataset2tensor(
     band_cld: list | None = None,
     load_variable: list | None = None,
 ):
-    time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
+    time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
     if load_variable is not None:
@@ -70,7 +70,7 @@ def from_dataset2tensor(
     if max_len is not None:
         temp_idx = sorted(random.sample([i for i in range(d_s["t"])], max_len))
         dataset = dataset.isel({"t": temp_idx})
-    time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
+    time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
 
@@ -118,16 +118,6 @@ def from_dataset2tensor(
 def crop_tensor(
     tensor: DataArray | Tensor, x, y, crop_size
 ) -> DataArray | Tensor:
-    """
-    Args:
-        tensor (): spatial dimension need to be the last two dimension of the tensor
-        x ():
-        y ():
-        crop_size ():
-
-    Returns:
-
-    """
     return tensor[..., x : x + crop_size, y : y + crop_size]
 
 
@@ -157,9 +147,7 @@ def get_crop_idx(
 
 
 def time_delta(
-    int_date: np.ndarray,
-    reference_date: np.datetime64 | None = None,
-    scale: float | None = None,
+    int_date: np.ndarray, reference_date: np.datetime64 | None = None
 ):
     date = np.datetime64("1970-01-01") + int_date.astype(
         int
@@ -167,6 +155,18 @@ def time_delta(
     if reference_date is None:
         reference_date = np.datetime64("2014-03-03", "D")
     duration = date - reference_date
+    return duration
+
+
+def time_delta_netcdf(
+    int_date: np.datetime64,
+    reference_date: np.datetime64 | None = None,
+    scale: float | None = None,
+):
+    # TODO set in constant file
+    if reference_date is None:
+        reference_date = np.datetime64("2014-03-03", "D")
+    duration = int_date - reference_date
     if scale is not None:
         return duration / scale
     return duration

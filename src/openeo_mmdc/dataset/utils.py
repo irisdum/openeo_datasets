@@ -99,7 +99,7 @@ def build_dataset_info(
 
 
 def load_one_mod(sits_pattern):
-    return xarray.open_mfdataset(sits_pattern)
+    return xarray.open_mfdataset(sits_pattern, mask_and_scale=False)
 
 
 def load_item_dataset_modality(
@@ -121,7 +121,11 @@ def load_item_dataset_modality(
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
     dataset = xarray.open_mfdataset(
-        path_im, combine="nested", decode_cf=False, chunks="auto"
+        path_im,
+        combine="nested",
+        mask_and_scale=False,
+        chunks="auto",
+        engine="h5netcdf",
     )
     my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:

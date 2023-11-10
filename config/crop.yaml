@@ -2,9 +2,10 @@ defaults:
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
-path_geojson: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
-path_global_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/
-s2_tile: 33UXR
+
+path_geojson: /home/ad/dumeuri/scratch/datasets/MMDC_OE/non_overlap_geojson
+path_global_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/train
+s2_tile: 31TDL
 max_cc: null
 hydra:
   output_subdir: null
