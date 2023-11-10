@@ -6,42 +6,56 @@ import hydra
 import torch
 
 from openeo_mmdc.dataset.convert import convert_to_tensor
+from openeo_mmdc.dataset.dataclass import MaskMod, OneMod
 from openeo_mmdc.dataset.utils import build_dataset_info
 
 my_logger = logging.getLogger(__name__)
 
 
-def save_per_mod(
-    mods: list, mmdc_sits, ex_dir: str | Path, suffix: str, crop_size=128
-):
+def save_per_mod(mods: list,
+                 mmdc_sits,
+                 ex_dir: str | Path,
+                 suffix: str,
+                 crop_size=128):
     for mod in mods:
         if mod == "s2":
-            my_logger.debug(Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
-            for i, tensor in enumerate(
-                crop_tensor(mmdc_sits.s2, crop_size=crop_size)
-            ):
+            print(Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
+            l_tensor = crop_mod(mmdc_sits.s2, crop_size=crop_size)
+            print(f"tensors {len(l_tensor)}")
+
+            for i, tensor in enumerate(l_tensor):
+                print(f"image id{i}")
                 torch.save(
-                    mmdc_sits.s2,
+                    tensor,
                     Path(ex_dir).joinpath(f"{suffix}_id{i}_{mod}.pt"),
                 )
         elif "s1_asc" == mod:
-            torch.save(
-                mmdc_sits.s1_asc, Path(ex_dir).joinpath(f"{suffix}_{mod}.pt")
-            )
+            torch.save(mmdc_sits.s1_asc,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
         elif "s1_desc" == mod:
-            torch.save(
-                mmdc_sits.s1_desc, Path(ex_dir).joinpath(f"{suffix}_{mod}.pt")
-            )
+            torch.save(mmdc_sits.s1_desc,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
         elif "dem" == mod:
-            torch.save(
-                mmdc_sits.dem, Path(ex_dir).joinpath(f"{suffix}_{mod}.pt")
-            )
+            torch.save(mmdc_sits.dem,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
         elif "agera5" == mod:
-            torch.save(
-                mmdc_sits.agera5, Path(ex_dir).joinpath(f"{suffix}_{mod}.pt")
-            )
+            torch.save(mmdc_sits.agera5,
+                       Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
         else:
             raise NotImplementedError(mod)
+
+
+def crop_mod(mod: OneMod, crop_size) -> list[OneMod]:
+    l_sits = crop_tensor(mod.sits, crop_size)
+    l_cld = crop_tensor(mod.mask.mask_cld, crop_size)
+    l_nan = crop_tensor(mod.mask.mask_nan, crop_size)
+    l_slc = crop_tensor(mod.mask.mask_slc, crop_size)
+    l_mod = []
+    for i, tensor in enumerate(l_sits):
+        maski = MaskMod(l_cld[i], l_nan[i], l_slc[i])
+        mod = OneMod(tensor, mod.doy, mask=maski)
+        l_mod += [mod]
+    return l_mod
 
 
 def crop_tensor(tensor, crop_size):
@@ -49,8 +63,7 @@ def crop_tensor(tensor, crop_size):
         return [tensor]
     assert tensor.shape[-1] % crop_size == 0, (
         f"impossible to crop image size {tensor.shape[-1]} should be devisible"
-        f" by {crop_size}"
-    )
+        f" by {crop_size}")
     assert tensor.shape[-1] == tensor.shape[-2]
     n_crops = tensor.shape[-1] // crop_size
     l_tensor = []
@@ -58,10 +71,11 @@ def crop_tensor(tensor, crop_size):
         l_tensor += [
             tensor[
                 ...,
-                n * crop_size : (n + 1) * crop_size,
-                n * crop_size : (n + 1) * crop_size,
+                n * crop_size:(n + 1) * crop_size,
+                n * crop_size:(n + 1) * crop_size,
             ]
         ]
+    print(len(l_tensor))
     return l_tensor
 
 
@@ -69,37 +83,38 @@ def convert(c_mmdc_df, config, item, mod_df, crop_size=128):
     item_series = c_mmdc_df.s2.iloc[item]
     tile = item_series["s2_tile"]
     patch_id = item_series["patch_id"][:-3]
-    ex_path = Path(config.ex_dir).joinpath(
-        f"{tile}/Patch_item_id_{patch_id}_{mod_df[0]}.pt"
-    )
-    if not ex_path.exists():
-        with suppress(BaseException):
-            Path(config.ex_dir).joinpath(tile).mkdir(exist_ok=True)
-            out_transform = convert_to_tensor(
-                c_mmdc_df, item, s2_max_ccp=config.s2_max_ccp, opt=config.opt
-            )
-            if config.opt == "all":
-                mod = ["s2", "s1_asc", "s1_desc", "dem", "agera5"]
-            elif config.opt == "s1":
-                mod = ["s1_asc", "s1_desc"]
-            elif config.opt == "s2":
-                mod = ["s2"]
-            elif config.opt == "sentinel":
-                mod = ["s2", "s1_asc", "s1_desc"]
-            else:
-                raise NotImplementedError
-            save_per_mod(
-                mods=mod,
-                mmdc_sits=out_transform,
-                ex_dir=Path(config.ex_dir).joinpath(tile),
-                suffix=f"Patch_id_{patch_id}",
-                crop_size=crop_size,
-            )
-            # torch.save(out_transform, ex_path)
+    pattern = f"{tile}/Patch_id_{patch_id}_*_{mod_df[0]}.pt"
+    my_logger.debug(pattern)
+    lfound = [i for i in Path(config.ex_dir).rglob(pattern)]
+    if not lfound:
+        #        with suppress(BaseException):
+        Path(config.ex_dir).joinpath(tile).mkdir(exist_ok=True)
+        out_transform = convert_to_tensor(c_mmdc_df,
+                                          item,
+                                          s2_max_ccp=config.s2_max_ccp,
+                                          opt=config.opt)
+        if config.opt == "all":
+            mod = ["s2", "s1_asc", "s1_desc", "dem", "agera5"]
+        elif config.opt == "s1":
+            mod = ["s1_asc", "s1_desc"]
+        elif config.opt == "s2":
+            mod = ["s2"]
+        elif config.opt == "sentinel":
+            mod = ["s2", "s1_asc", "s1_desc"]
+        else:
+            raise NotImplementedError
+        save_per_mod(
+            mods=mod,
+            mmdc_sits=out_transform,
+            ex_dir=Path(config.ex_dir).joinpath(tile),
+            suffix=f"Patch_id_{patch_id}",
+            crop_size=crop_size,
+        )
+        # torch.save(out_transform, ex_path)
 
-            my_logger.info(f"Create {ex_path}")
     else:
-        my_logger.info(f"We have already created tensor {ex_path}")
+        ex_path = f"{tile}/Patch_item_id_{patch_id}_*_{mod_df[0]}.pt"
+        my_logger.info(f"We have already created tensor {ex_path} {lfound}")
     return item
 
 
@@ -124,9 +139,9 @@ def main(config):
         ]
     else:
         mod_df = config.mod_df
-    c_mmdc_df = build_dataset_info(
-        path_dir=directory, l_tile_s2=config.s2_tile, list_modalities=mod_df
-    )
+    c_mmdc_df = build_dataset_info(path_dir=directory,
+                                   l_tile_s2=config.s2_tile,
+                                   list_modalities=mod_df)
     torch.save(
         c_mmdc_df,
         Path(config.ex_dir).joinpath("tiles_descriptions.pt"),
@@ -138,9 +153,11 @@ def main(config):
     res_item = []
     for item in range(len(c_mmdc_df.s2)):
         # item_out = dask.delayed(convert)(c_mmdc_df, config, item, mod_df)
-        item_out = convert(
-            c_mmdc_df, config, item, mod_df, crop_size=config.crop_size
-        )
+        item_out = convert(c_mmdc_df,
+                           config,
+                           item,
+                           mod_df,
+                           crop_size=config.crop_size)
         res_item.append(item_out)
     # results = dask.compute(*res_item)
     return res_item

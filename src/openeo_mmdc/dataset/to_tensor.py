@@ -23,12 +23,10 @@ from openeo_mmdc.dataset.transform import Clip, S2Normalize
 my_logger = logging.getLogger(__name__)
 
 
-def light_from_dataset2tensor(
-    dataset: xarray.Dataset,
-    band_cld: list | None = None,
-    load_variable: list | None = None,
-):
-    time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
+def light_from_dataset2tensor(dataset: xarray.Dataset,
+                              band_cld: list | None = None,
+                              load_variable: list | None = None):
+    time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
     if load_variable is not None:
@@ -70,7 +68,7 @@ def from_dataset2tensor(
     if max_len is not None:
         temp_idx = sorted(random.sample([i for i in range(d_s["t"])], max_len))
         dataset = dataset.isel({"t": temp_idx})
-    time_info = xarray.apply_ufunc(time_delta, dataset.coords["t"])
+    time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
 
@@ -156,6 +154,18 @@ def time_delta(int_date: np.ndarray,
     return duration
 
 
+def time_delta_netcdf(int_date: np.datetime64,
+                      reference_date: np.datetime64 | None = None,
+                      scale: float | None = None):
+    #TODO set in constant file
+    if reference_date is None:
+        reference_date = np.datetime64("2014-03-03", "D")
+    duration = int_date - reference_date
+    if scale is not None:
+        return duration / scale
+    return duration
+
+
 def randomcropindex(img_h: int, img_w: int, cropped_h: int,
                     cropped_w: int) -> tuple[int, int]:
     """
@@ -204,8 +214,16 @@ def merge_stats_agera5(path_dir_csv, l_agera_mod) -> Stats:
 def load_transform_one_mod(
     path_dir_csv: str | None = None,
     mod: Literal["s2", "s1_asc", "s1_desc", "dem"]
-    | list[Literal["dew_temp", "prec", "sol_rad", "temp_max", "temp_mean",
-                   "temp_min", "val_press", "wind_speed", ]] = "s2",
+    | list[Literal[
+        "dew_temp",
+        "prec",
+        "sol_rad",
+        "temp_max",
+        "temp_mean",
+        "temp_min",
+        "val_press",
+        "wind_speed",
+    ]] = "s2",
 ) -> [None | torch.nn.Module, Stats]:
     if path_dir_csv is not None:
         if isinstance(mod, str):

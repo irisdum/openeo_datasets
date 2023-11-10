@@ -27,7 +27,7 @@ def compute_stats_one_mod(
     l_open_file = [list_all_files[idx] for idx in idx_file]
     my_logger.info(l_open_file)
     global_dataset = xarray.open_mfdataset(l_open_file,
-                                           decode_cf=False,
+                                           mask_and_scale=False,
                                            chunks={
                                                't': "500MB",
                                                'x': "500MB",
