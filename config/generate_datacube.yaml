@@ -2,11 +2,13 @@ defaults:
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
+begin_date: null
+end_date: null
+year: 2018
+pattern: pretrain_train*.geojson #pretrain_train*.geojson
 
-year: 2017
-pattern: pretrain_train*.geojson
 geojson_dir: /home/dumeuri/Documents/dataset/datacubes/non_overlap_geojson
-id: 6
+id: 0
 opt: s2
 agera_band: null
 max_cc: 100

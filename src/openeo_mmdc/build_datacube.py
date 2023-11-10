@@ -82,14 +82,14 @@ def download_s2(
         properties={"provider:backend": lambda v: v == "vito"},
     )
     job_options = {
-        "executor-memory": "8G",
+        "executor-memory": "10G",
         "executor-memoryOverhead": "16G",  # default 2G
         "executor-cores": 2,
         "task-cpus": 1,
         "executor-request-cores": "400m",
         "max-executors": "100",
-        "driver-memory": "12G",
-        "driver-memoryOverhead": "10G",
+        "driver-memory": "16G",
+        "driver-memoryOverhead": "16G",
         "driver-cores": 5,
         "udf-dependency-archives": [],
         "logging-threshold": "info",

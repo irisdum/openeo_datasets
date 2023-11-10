@@ -33,8 +33,10 @@ def load_mmdc_path(
 ) -> pd.DataFrame:
     assert Path(path_dir).exists(), f"{path_dir} not found"
     list_available_sits = [
-        p for p in Path(path_dir).rglob(
-            f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}")
+        p
+        for p in Path(path_dir).rglob(
+            f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}"
+        )
     ]
     my_logger.debug(list_available_sits[0])
     my_logger.debug(f"*/*{D_MODALITY[modality]}*/**/*_{FORMAT_SITS}")
@@ -59,8 +61,9 @@ def load_mmdc_path(
     return final_df
 
 
-def build_dataframe(path_dir, l_modality: list,
-                    s2_tile: list[str]) -> pd.DataFrame:
+def build_dataframe(
+    path_dir, l_modality: list, s2_tile: list[str]
+) -> pd.DataFrame:
     l_mod_df = []
     for mod in l_modality:
         l_mod_df += [load_mmdc_path(path_dir, modality=mod, s2_tile=s2_tile)]
@@ -70,26 +73,28 @@ def build_dataframe(path_dir, l_modality: list,
 def build_dataset_info(
     path_dir: str,
     l_tile_s2: list[str],
-    list_modalities: list[Literal[
-        "s2",
-        "s1_asc",
-        "s1_desc",
-        "dem",
-        "dew_temp",
-        "prec",
-        "sol_rad",
-        "temp_max",
-        "temp_mean",
-        "temp_min",
-        "val_press",
-        "wind_speed",
-    ]],
+    list_modalities: list[
+        Literal[
+            "s2",
+            "s1_asc",
+            "s1_desc",
+            "dem",
+            "dew_temp",
+            "prec",
+            "sol_rad",
+            "temp_max",
+            "temp_mean",
+            "temp_min",
+            "val_press",
+            "wind_speed",
+        ]
+    ],
 ) -> MMDCDF:  # TODO deal with AGERA5 data
     d_mod = {}
     for mod in list_modalities:
-        d_mod[mod] = load_mmdc_path(path_dir=path_dir,
-                                    modality=mod,
-                                    s2_tile=l_tile_s2)
+        d_mod[mod] = load_mmdc_path(
+            path_dir=path_dir, modality=mod, s2_tile=l_tile_s2
+        )
     return MMDCDF(**d_mod)
 
 
@@ -115,10 +120,9 @@ def load_item_dataset_modality(
     # print(item_series["sits_path"])
     path_im = item_series["sits_path"]
     my_logger.debug(f"we are loading {path_im}")
-    dataset = xarray.open_mfdataset(path_im,
-                                    combine="nested",
-                                    decode_cf=False,
-                                    chunks="auto")
+    dataset = xarray.open_mfdataset(
+        path_im, combine="nested", decode_cf=False, chunks="auto"
+    )
     my_logger.debug(f"load var{load_variables}")
     if drop_variable is not None:
         my_logger.debug(f"drop_var {drop_variable}")
@@ -137,7 +141,7 @@ def load_item_dataset_modality(
         cldb = dataset["CLM"] == 1
         ccp = cldb.sum(dim=["x", "y"])
         ccp = ccp.compute()
-        t_sel = ccp.where(ccp < max_pix_cc, drop=True)['t']
+        t_sel = ccp.where(ccp < max_pix_cc, drop=True)["t"]
         dataset = dataset.sel(t=t_sel)
     return dataset
 
@@ -152,8 +156,9 @@ def order_dataset_vars(dataset, list_vars_order=None):
     return dataset[sorted_vars]
 
 
-def merge_agera5_datasets(l_agera5_df: list[pd.DataFrame],
-                          item: int) -> Dataset:
+def merge_agera5_datasets(
+    l_agera5_df: list[pd.DataFrame], item: int
+) -> Dataset:
     l_dataset_agera5 = [
         load_item_dataset_modality(mod_df, item) for mod_df in l_agera5_df
     ]

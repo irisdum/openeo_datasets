@@ -5,8 +5,8 @@ defaults:
 
 
 where: local
-path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230622.csv
-list_id: [vito-j-cab0113bb02643d2b1896280da7c95ad,vito-j-fdbe81be4dea40eaa3033983002a72a7]#[vito-j-8f3ab063776f48ef9eb20d539d5c94f5] #null #[vito-j-0da04cc86d0242a2943ec918f57cf512,vito-j-f1b6619adc7f4aad826a1ddc8dbbc1a2,vito-j-d9d536aaf520441494a1a46dd24456c1] #null #[vito-j-dbdf8b8515684d45a9e8e13cf19d387a,]
+path_csv: /media/dumeuri/DATA/Data/Iris/MMDC_OE/reporting_export_20230629.csv
+list_id: [vito-j-00955713754648a3aa5ebdde97301335] #[vito-j-5055dc7617554d1687324ef100084f6e,vito-j-9981d97100d846cd865308efa05a66dd] #[vito-j-a7c6e5f706684332a748db6f0ede884c] #[vito-j-3360ce649e3c4e2eb579a70bc1458e4a] #[vito-j-cab0113bb02643d2b1896280da7c95ad,vito-j-fdbe81be4dea40eaa3033983002a72a7]#[vito-j-8f3ab063776f48ef9eb20d539d5c94f5] #null #[vito-j-0da04cc86d0242a2943ec918f57cf512,vito-j-f1b6619adc7f4aad826a1ddc8dbbc1a2,vito-j-d9d536aaf520441494a1a46dd24456c1] #null #[vito-j-dbdf8b8515684d45a9e8e13cf19d387a,]
 ex_dir: /media/dumeuri/DATA/Data/Iris/MMDC_OE/
 
 hydra:
