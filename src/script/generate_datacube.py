@@ -46,7 +46,11 @@ def main(config: DictConfig):
     c.authenticate_oidc()
     print(c.describe_account())
     year = str(config.year)
-    TIMERANGE = [f"{config.year}-01-01", f"{config.year}-12-31"]
+    if config.begin_date is None or config.end_date is None:
+        TIMERANGE = [f"{config.year}-01-01", f"{config.year}-12-31"]
+    else:
+        TIMERANGE = [config.begin_date, config.end_date]
+    print(TIMERANGE)
     FEAT = sorted(Path(config.geojson_dir).rglob(pattern=config.pattern))
     assert FEAT, "No geoson file found"
     features = FEAT[config.id]

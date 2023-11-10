@@ -20,6 +20,7 @@ class MaskMod:
     mask_nan: Tensor | None = None
     mask_slc: Tensor | None = None
     mask_clp: Tensor | None = None
+    padd_mask: Tensor | None = None  # 1 if the date has been padded
 
 
 @dataclass
