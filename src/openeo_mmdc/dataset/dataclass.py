@@ -28,6 +28,7 @@ class OneMod:
     sits: Tensor
     doy: Tensor
     mask: MaskMod = MaskMod()
+    true_doy: None | Tensor = None
 
 
 @dataclass

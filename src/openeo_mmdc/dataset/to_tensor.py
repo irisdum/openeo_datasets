@@ -1,5 +1,7 @@
+import calendar
 import logging
 import random
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +33,9 @@ def light_from_dataset2tensor(
     time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
     time = time.astype("int32")
+    true_time_doy = xarray.apply_ufunc(
+        time_delta_netcdf_doy, dataset.coords["t"]
+    ).values()
     if load_variable is not None:
         spectral_dataset = dataset[load_variable]
         if band_cld is not None:
@@ -38,20 +43,24 @@ def light_from_dataset2tensor(
     else:
         spectral_dataset = dataset
     sits = spectral_dataset.to_array()
-    sits = torch.Tensor(sits.values)
+    sits = torch.Tensor(sits.values).to(torch.int16)
     if band_cld is not None:
         nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
         cld_mask = torch.Tensor(cld_dataset[["CLM"]].to_array().values)
         mask_sits = MaskMod(
-            mask_cld=cld_mask,
+            mask_cld=cld_mask.to(torch.int16),
             mask_nan=nan_mask,
-            mask_slc=torch.Tensor(cld_dataset[["SCL"]].to_array().values),
+            mask_slc=torch.Tensor(cld_dataset[["SCL"]].to_array().values).to(
+                torch.int16
+            ),
         )
         # print(f"mask cld {cld_mask[0,:,0,0]}")
     else:
         my_logger.debug("No cld mask applied")
         mask_sits = MaskMod()
-    return OneMod(sits, torch.Tensor(time), mask=mask_sits)
+    return OneMod(
+        sits, torch.Tensor(time), mask=mask_sits, true_doy=true_time_doy
+    )
 
 
 def from_dataset2tensor(
@@ -170,6 +179,14 @@ def time_delta_netcdf(
     if scale is not None:
         return duration / scale
     return duration
+
+
+def time_delta_netcdf_doy(date: np.datetime64) -> float:
+    date = date.astype(datetime)
+    doy = date.tm_yday
+    year = date.tm_year
+    scale_year = 366 if calendar.isleap(year) else 365
+    return doy / scale_year
 
 
 def randomcropindex(
