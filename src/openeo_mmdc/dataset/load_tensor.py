@@ -37,24 +37,22 @@ def create_mmcd_tensor_df(
     return PT_MMDC_DF(**out_mod)
 
 
-def create_mod_df_tensor(
-    path_dir: str, s2_tile, modality: str, format=".pt"
-) -> pd.DataFrame:
+def create_mod_df_tensor(path_dir: str,
+                         s2_tile,
+                         modality: str,
+                         format=".pt") -> pd.DataFrame:
     assert Path(path_dir).exists(), f"{path_dir} not found"
     print(modality)
     l_df = []
     for tile in s2_tile:
         pattern = f"{tile}/*{modality}{format}"
-        l_s2 = [
-            p for p in Path(path_dir).rglob(pattern)
-        ]  # extract all s2 tiles
+        l_s2 = [p
+                for p in Path(path_dir).rglob(pattern)]  # extract all s2 tiles
         l_df += [
             pd.DataFrame(
-                create_dict_one_sits(
-                    path_sits=path, mod=modality, s2_tile=tile
-                )
-            )
-            for path in l_s2
+                create_dict_one_sits(path_sits=path,
+                                     mod=modality,
+                                     s2_tile=tile)) for path in l_s2
         ]
         assert l_s2, f"No image found at {pattern} at {path_dir}"
     my_logger.debug(l_df)
@@ -65,14 +63,12 @@ def create_mod_df_tensor(
 
 def create_dict_one_sits(path_sits: Path, mod: str, s2_tile: str):
     patch_id = path_sits.name.split("openEO_")[-1][:2]
-    return [
-        {
-            "mod": mod,
-            "patch_id": patch_id,
-            "s2_tile": s2_tile,
-            "sits_path": path_sits,
-        }
-    ]
+    return [{
+        "mod": mod,
+        "patch_id": patch_id,
+        "s2_tile": s2_tile,
+        "sits_path": path_sits,
+    }]
 
 
 def crop_spat_temp(
@@ -83,12 +79,12 @@ def crop_spat_temp(
     list_t,
     padding_val: int = 0,
 ):
-    assert (
-        len(tensor.shape) == 4
-    ), f"expected tensor type c,t,h,w got {tensor.shape}"
+    assert (len(
+        tensor.shape) == 4), f"expected tensor type c,t,h,w got {tensor.shape}"
     cropped_tensor = crop_tensor(tensor, x, y, crop_size)
 
     if list_t is not None:
+        my_logger.debug(f"list_t {len(list_t)} x {cropped_tensor.shape}")
         cropped_tensor = cropped_tensor[:, list_t, ...]
     if padding_val:
         my_logger.debug(f"Apply padding of dim {padding_val}")
@@ -183,21 +179,21 @@ def load_sits(
     if transform:  # TODO move that onto the GPU ?
         sits_obj.sits = transform(sits_obj.sits)
     row, col = shape_sits[-1], shape_sits[-2]
-    x, y = get_crop_idx(
-        rows=row, cols=col, crop_size=crop_size, crop_type=crop_type
-    )
+    x, y = get_crop_idx(rows=row,
+                        cols=col,
+                        crop_size=crop_size,
+                        crop_type=crop_type)
     if seed is not None:
         random.seed(seed)
     if max_len is not None:
-        temp_idx = sorted(
-            random.sample([i for i in range(shape_sits[1])], max_len)
-        )
-        if max_len > shape_sits[1]:
+        if max_len < shape_sits[1]:
+            temp_idx = sorted(
+                random.sample([i for i in range(shape_sits[1])], max_len))
+        else:
             my_logger.debug(
                 f"sits temporal dim {shape_sits[1]} is lower than max len"
-                f" {max_len}"
-            )
-            temp_idx = [i for i in range(max_len)]
+                f" {max_len}")
+            temp_idx = [i for i in range(shape_sits[1])]
 
     else:
         temp_idx = None
@@ -206,16 +202,13 @@ def load_sits(
     my_logger.debug(sits_obj.mask.mask_cld.shape)
     my_logger.debug(sits_obj.mask.mask_nan[None, ...].shape)
 
-    crop_mask_cld = crop_spat_temp(
-        sits_obj.mask.mask_cld, x, y, crop_size, temp_idx
-    )
-    crop_mask_scl = crop_spat_temp(
-        sits_obj.mask.mask_slc, x, y, crop_size, temp_idx
-    )
+    crop_mask_cld = crop_spat_temp(sits_obj.mask.mask_cld, x, y, crop_size,
+                                   temp_idx)
+    crop_mask_scl = crop_spat_temp(sits_obj.mask.mask_slc, x, y, crop_size,
+                                   temp_idx)
 
-    crop_nan_mask = crop_spat_temp(
-        sits_obj.mask.mask_nan[None, ...], x, y, crop_size, temp_idx
-    )
+    crop_nan_mask = crop_spat_temp(sits_obj.mask.mask_nan[None, ...], x, y,
+                                   crop_size, temp_idx)
     # padd_mask=crop_spat_temp(torch.ones(shape_sits),x,y,crop_size,temp_idx)
     cropped_mask = MaskMod(
         mask_cld=crop_mask_cld,

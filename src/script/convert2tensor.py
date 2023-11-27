@@ -22,7 +22,6 @@ def save_per_mod(mods: list,
             print(Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
             l_tensor = crop_mod(mmdc_sits.s2, crop_size=crop_size)
             print(f"tensors {len(l_tensor)}")
-
             for i, tensor in enumerate(l_tensor):
                 print(f"image id{i}")
                 torch.save(
@@ -53,7 +52,7 @@ def crop_mod(mod: OneMod, crop_size) -> list[OneMod]:
     l_mod = []
     for i, tensor in enumerate(l_sits):
         maski = MaskMod(l_cld[i], l_nan[i], l_slc[i])
-        mod = OneMod(tensor, mod.doy, mask=maski)
+        mod = OneMod(tensor, mod.doy, mask=maski, true_doy=mod.true_doy)
         l_mod += [mod]
     return l_mod
 
