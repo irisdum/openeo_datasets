@@ -215,7 +215,10 @@ def load_sits(
         mask_slc=crop_mask_scl,
         mask_nan=crop_nan_mask,  # ,padd_mask=padd_mask.bool()
     )
-    temp_cropped_doy = sits_obj.doy[temp_idx]
+    if temp_idx is not None:
+        temp_cropped_doy = sits_obj.doy[temp_idx]
+    else:
+        temp_cropped_doy = sits_obj.doy
     # if padding_val>0:
     #     temp_cropped_doy=F.pad(temp_cropped_doy,(padding_val,1))
     return OneMod(sits=crop_sits, doy=temp_cropped_doy, mask=cropped_mask)
