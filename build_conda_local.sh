@@ -1,13 +1,15 @@
 export python_version="3.10"
 export name="mmdc_eo"
 conda deactivate
+module purge 
+module load anaconda-py3/2019.03
 if ! [ -z "$1" ]
 then
     export name=$1
 fi
 
 
-export target=/home/dumeuri/virtualenv/$name
+export target=/linkhome/rech/gencww01/ubc65oh/.conda/envs/$name
 echo "$target"
 if ! [ -z "$2" ]
 then
