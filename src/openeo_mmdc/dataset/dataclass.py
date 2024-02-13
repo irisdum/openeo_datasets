@@ -3,7 +3,10 @@ from dataclasses import dataclass
 
 import pandas as pd
 import torch.nn
+from einops import rearrange
 from torch import Tensor
+
+from openeo_mmdc.dataset.padding import apply_padding
 
 logging.config.dictConfig(
     {
@@ -24,11 +27,31 @@ class MaskMod:
 
 
 @dataclass
+class PaddingMMDC:
+    max_len_s2: int | None = None
+    max_len_s1_asc: int | None = None
+    max_len_s1_desc: int | None = None
+    max_len_agera5: int | None = None
+
+
+@dataclass
 class OneMod:
     sits: Tensor
     doy: Tensor
     mask: MaskMod = MaskMod()
     true_doy: None | Tensor = None
+
+    def apply_padding(self, max_len: int, allow_padd=True):
+        sits = rearrange(self.sits, "c t h w -> t c h w")
+        t = sits.shape[0]
+        sits, doy, padd_index = apply_padding(
+            allow_padd, max_len, t, sits, self.doy
+        )
+        if self.true_doy is not None:
+            raise NotImplementedError
+        if self.mask.mask_cld is not None:
+            raise NotImplementedError
+        return OneMod(sits=sits, doy=doy, mask=MaskMod(padd_mask=padd_index))
 
 
 @dataclass
@@ -38,6 +61,15 @@ class ItemTensorMMDC:
     s1_desc: OneMod | None = None
     dem: OneMod | None = None
     agera5: OneMod | None = None
+
+    def apply_padding(self, paddmmdc: PaddingMMDC):
+        return ItemTensorMMDC(
+            self.s2.apply_padding(paddmmdc.max_len_s2),
+            s1_asc=self.s1_asc.apply_padding(paddmmdc.max_len_s1_asc),
+            s1_desc=self.s1_desc.apply_padding(paddmmdc.max_len_s1_desc),
+            dem=self.dem,
+            agera5=self.agera5.apply_padding(paddmmdc.max_len_agera5),
+        )
 
 
 @dataclass
