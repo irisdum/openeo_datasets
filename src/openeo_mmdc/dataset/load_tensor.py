@@ -178,6 +178,7 @@ def load_sits(
     shape_sits = sits_obj.sits.shape
     if transform:  # TODO move that onto the GPU ?
         sits_obj.sits = transform(sits_obj.sits)
+
     row, col = shape_sits[-1], shape_sits[-2]
     x, y = get_crop_idx(rows=row,
                         cols=col,
