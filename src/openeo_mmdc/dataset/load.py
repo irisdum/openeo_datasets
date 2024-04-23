@@ -73,7 +73,7 @@ def mmdc_sits(
 
     if opt in ("all", "s1"):
         s1_asc_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.s1_asc, item=item
+            mod_df=c_mmdc_df.s1_asc, item=item, mask_and_scale=True
         )  # TODO maybe use drop_var depends if we want to keep the angle ...
         out["s1_asc"] = from_dataset2tensor(
             s1_asc_dataset,
@@ -84,7 +84,7 @@ def mmdc_sits(
             seed=seed,
         )
         s1_des_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.s1_desc, item=item
+            mod_df=c_mmdc_df.s1_desc, item=item, mask_and_scale=True
         )
         out["s1_desc"] = from_dataset2tensor(
             s1_des_dataset,

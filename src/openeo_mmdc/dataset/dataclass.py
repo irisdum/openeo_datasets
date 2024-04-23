@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import torch.nn
+import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 
@@ -24,6 +25,16 @@ class MaskMod:
     mask_slc: Tensor | None = None
     mask_clp: Tensor | None = None
     padd_mask: Tensor | None = None  # 1 if the date has been padded
+
+    def merge_mask(self) -> Tensor:
+        cld_mask = self.mask_cld == 1
+        # my_logger.debug(f"mask cld in fun {cld_mask[0, :, 0, 0]}")
+        nan_mask = self.mask_slc == 0
+        cld_mask_scl = torch.logical_and(self.mask_slc > 6, self.mask_slc < 11)
+        cld_mask_scl = torch.logical_or(cld_mask_scl, self.mask_slc < 2)
+        cld_mask_scl = torch.logical_or(cld_mask_scl, self.mask_slc == 3)
+        cld_mask = torch.logical_or(cld_mask, cld_mask_scl)
+        return torch.logical_or(cld_mask, nan_mask)
 
 
 @dataclass
@@ -48,10 +59,34 @@ class OneMod:
             allow_padd, max_len, t, sits, self.doy
         )
         if self.true_doy is not None:
-            raise NotImplementedError
+            padd_doy = (0, max_len - t)
+            true_doy = F.pad(self.true_doy, padd_doy)
         if self.mask.mask_cld is not None:
-            raise NotImplementedError
-        return OneMod(sits=sits, doy=doy, mask=MaskMod(padd_mask=padd_index))
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_cld = F.pad(self.mask.mask_cld, padd_tensor)
+        else:
+            mask_cld = None
+        if self.mask.mask_nan is not None:
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_nan = F.pad(self.mask.mask_nan, padd_tensor)
+        else:
+            mask_nan = None
+        if self.mask.mask_slc is not None:
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_slc = F.pad(self.mask.mask_slc, padd_tensor)
+        else:
+            mask_slc = None
+        return OneMod(
+            sits=sits,
+            doy=doy,
+            true_doy=true_doy,
+            mask=MaskMod(
+                padd_mask=padd_index,
+                mask_cld=mask_cld,
+                mask_slc=mask_slc,
+                mask_nan=mask_nan,
+            ),
+        )
 
 
 @dataclass
