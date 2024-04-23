@@ -116,18 +116,18 @@ def main(config: DictConfig):
     l_out = []
     for job_id in list_id:
         res = c.job(job_id).get_results()
-        try:
-            l_out += dwnd_res(res, ex_dir)
+        #try:
+        l_out += dwnd_res(res, ex_dir)
 
-        except openeo.rest.OpenEoApiError:
-            if job_id[0] != "v":  # TODO hard fix not sure correct
-                job_id = "vito-" + job_id
-            try:
-                res = c.job(job_id).get_results()
-                l_out += dwnd_res(res, ex_dir)
+        # except openeo.rest.OpenEoApiError:
+        #     if job_id[0] != "v":  # TODO hard fix not sure correct
+        #         job_id = "vito-" + job_id
+        #     try:
+        #         res = c.job(job_id).get_results()
+        #         l_out += dwnd_res(res, ex_dir)
 
-            except openeo.rest.OpenEoApiError:
-                print(f"OPenEo AI rest error {res} ")
+        #     except openeo.rest.OpenEoApiError:
+        #         print(f"OPenEo AI rest error {res} ")
     dask.compute(*l_out)
 
 

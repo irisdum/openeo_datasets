@@ -98,12 +98,24 @@ class ItemTensorMMDC:
     agera5: OneMod | None = None
 
     def apply_padding(self, paddmmdc: PaddingMMDC):
+        if self.s1_asc is not None:
+            s1_asc = self.s1_asc.apply_padding(paddmmdc.max_len_s1_asc)
+        else:
+            s1_asc = None
+        if self.s1_desc is not None:
+            s1_desc = self.s1_desc.apply_padding(paddmmdc.max_len_s1_desc)
+        else:
+            s1_desc = None
+        if self.s2 is not None:
+            s2 = self.s2.apply_padding(paddmmdc.max_len_s2)
+        else:
+            s2 = None
+        if self.agera5 is not None:
+            agera5 = self.agera5.apply_padding(paddmmdc.max_len_agera5)
+        else:
+            agera5 = None
         return ItemTensorMMDC(
-            self.s2.apply_padding(paddmmdc.max_len_s2),
-            s1_asc=self.s1_asc.apply_padding(paddmmdc.max_len_s1_asc),
-            s1_desc=self.s1_desc.apply_padding(paddmmdc.max_len_s1_desc),
-            dem=self.dem,
-            agera5=self.agera5.apply_padding(paddmmdc.max_len_agera5),
+            s2=s2, s1_asc=s1_asc, s1_desc=s1_desc, dem=self.dem, agera5=agera5
         )
 
 
