@@ -142,7 +142,7 @@ def load_item_dataset_modality(
         ccp = ccp.compute()
         t_sel = ccp.where(ccp < max_pix_cc, drop=True)["t"]
         dataset = dataset.sel(t=t_sel)
-    return dataset.astype("int16")
+    return dataset
 
 
 def order_dataset_vars(dataset, list_vars_order=None):

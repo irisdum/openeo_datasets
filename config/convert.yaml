@@ -5,4 +5,4 @@ s2_tile: ["31TDL","31TEN","32UQD","33UXR","34TFR"] # ["30TYR","31TEK","32TNR","3
 s2_max_ccp: 0.5
 opt: s2
 crop_size: 128
-
+years: null
