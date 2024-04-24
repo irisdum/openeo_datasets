@@ -2,8 +2,8 @@ defaults:
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
-begin_date: null
-end_date: null
+begin_date: 01/02/2017
+end_date: 30/04/2018
 year: 2018
 pattern: pretrain_train*.geojson #pretrain_train*.geojson
 

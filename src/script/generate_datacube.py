@@ -62,7 +62,7 @@ def main(config: DictConfig):
             print(feat)
             features = json.load(feat)
     # print(features)
-    if config.opt in ("all", "s2"):
+    if config.opt in ("all", "s2", "s1s2"):
         run_s2 = True
     else:
         run_s2 = False
@@ -75,7 +75,7 @@ def main(config: DictConfig):
         run=run_s2,
         max_cc=config.max_cc,
     )
-    if config.opt in ("all", "s1_asc"):
+    if config.opt in ("all", "s1_asc", "s1s2"):
         download_s1(
             c,
             collection_s2=output_s2.collection,
