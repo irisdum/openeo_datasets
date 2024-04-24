@@ -55,7 +55,7 @@ def light_from_dataset2tensor(
         cld_mask = torch.Tensor(cld_dataset[["CLM"]].to_array().values)
         mask_sits = MaskMod(
             mask_cld=cld_mask.to(torch.int16),
-            mask_nan=nan_mask,
+            mask_nan=torch.sum(mask_nan, dim=0),
             mask_slc=torch.Tensor(cld_dataset[["SCL"]].to_array().values).to(
                 torch.int16),
         )

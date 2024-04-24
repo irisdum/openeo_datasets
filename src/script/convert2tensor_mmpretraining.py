@@ -11,13 +11,16 @@ from script.convert2tensor import save_per_mod
 my_logger = logging.getLogger(__name__)
 
 
-def convert_mm(
-    c_mmdc_df, config, item, mod_df, crop_size=128, seed: int | None = None
-):
+def convert_mm(c_mmdc_df,
+               config,
+               item,
+               mod_df,
+               crop_size=128,
+               seed: int | None = None):
     item_series = c_mmdc_df.s2.iloc[item]
     tile = item_series["s2_tile"]
     patch_id = item_series["patch_id"][:-3]
-    pattern = f"{tile}/Patch_id_{patch_id}_*_{mod_df[0]}.pt"
+    pattern = f"{tile}/Patch_id_{patch_id}_clip_seed{seed}*_{mod_df[0]}.pt"
     my_logger.debug(pattern)
     lfound = [i for i in Path(config.ex_dir).rglob(pattern)]
     if not lfound:
@@ -35,10 +38,14 @@ def convert_mm(
             mod = ["s2", "s1_asc", "s1_desc", "dem", "agera5"]
         elif config.opt == "s1":
             mod = ["s1_asc", "s1_desc"]
+        elif config.opt == "s1_asc":
+            mod = ["s1_asc"]
         elif config.opt == "s2":
             mod = ["s2"]
         elif config.opt == "sentinel":
             mod = ["s2", "s1_asc", "s1_desc"]
+        elif config.opt == "s1s2":
+            mod = ["s2", "s1_asc"]
         else:
             raise NotImplementedError
         save_per_mod(
@@ -56,7 +63,7 @@ def convert_mm(
     return item
 
 
-@hydra.main(config_path="../../config/", config_name="convert.yaml")
+@hydra.main(config_path="../../config/", config_name="convert_mm.yaml")
 def main(config):
     directory = config.directory
     Path(config.ex_dir).mkdir(exist_ok=True, parents=True)
@@ -77,9 +84,9 @@ def main(config):
         ]
     else:
         mod_df = config.mod_df
-    c_mmdc_df = build_dataset_info(
-        path_dir=directory, l_tile_s2=config.s2_tile, list_modalities=mod_df
-    )
+    c_mmdc_df = build_dataset_info(path_dir=directory,
+                                   l_tile_s2=config.s2_tile,
+                                   list_modalities=mod_df)
     torch.save(
         c_mmdc_df,
         Path(config.ex_dir).joinpath("tiles_descriptions.pt"),
@@ -87,7 +94,8 @@ def main(config):
     res_item = []
     for item in range(len(c_mmdc_df.s2)):
         # item_out = dask.delayed(convert)(c_mmdc_df, config, item, mod_df)
-        for rep in config.repeat:
+        for rep in range(config.repeat):
+            print(f"REP {rep}")
             item_out = convert_mm(
                 c_mmdc_df,
                 config,

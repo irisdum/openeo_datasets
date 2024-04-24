@@ -196,19 +196,8 @@ def convert_rd_time_crop_mm_sits(
         s2_load_bands = S2_BAND
     if s2_band_mask is None:
         s2_band_mask = CLD_MASK_BAND
-    if opt in ("all", "s2"):
-        s2_dataset = load_item_dataset_modality(
-            mod_df=c_mmdc_df.s2,
-            item=item,
-            drop_variable=s2_drop_variable,
-            load_variables=s2_load_bands + s2_band_mask,
-            s2_max_ccp=s2_max_ccp,
-        )
-        out["s2"] = light_from_dataset2tensor(
-            s2_dataset,
-            band_cld=s2_band_mask,
-            load_variable=s2_load_bands,
-        )
+    if l_possible_months is None:
+        l_possible_months = [i for i in range(6, 13)]
 
     np.random.seed(seed)
     n_months = np.random.choice(l_possible_months)
@@ -219,10 +208,11 @@ def convert_rd_time_crop_mm_sits(
     end_max_time = np.datetime64(END_TIME_SITS, "D") - np.timedelta64(
         n_months * 30, "D")
     beg_time_min = np.datetime64(BEG_TIME_SITS, "D")
+    np.random.seed(seed + 1)
     rd_start_date = np.random.choice(times[(times >= beg_time_min)
                                            & (times <= end_max_time)])
     end_date = rd_start_date + np.timedelta64(n_months * 30, "D")
-    if opt in ("all", "s2"):
+    if opt in ("all", "s2", "s1s2"):
         s2_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s2,
             item=item,
@@ -237,7 +227,7 @@ def convert_rd_time_crop_mm_sits(
             load_variable=s2_load_bands,
         )
 
-    if opt in ("all", "s1_asc"):
+    if opt in ("all", "s1_asc", "s1s2"):
         s1_asc_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_asc,
             item=item,
