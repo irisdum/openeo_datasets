@@ -7,14 +7,14 @@ then
     export name=$1
 fi
 
-source ~/set_proxy.sh
+source /home/ad/$USER/set_proxy.sh
 if [ -z "$https_proxy" ]
 then
     echo "Please set https_proxy environment variable before running this script"
     exit 1
 fi
 
-export target=/work/scratch/$USER/virtualenv/$name
+export target=/work/scratch/env/$USER/$name
 
 if ! [ -z "$2" ]
 then

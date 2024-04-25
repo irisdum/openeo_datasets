@@ -14,6 +14,7 @@ from openeo_mmdc.dataset.dataclass import (
     MaskMod,
     ModTransform,
     OneMod,
+    n,
 )
 from openeo_mmdc.dataset.to_tensor import crop_tensor, get_crop_idx
 
@@ -101,7 +102,7 @@ def load_mmdc_sits(
     crop_size: int,
     crop_type: Literal["Center", "Random"],
     max_len: MMDC_MAXLEN,  # TOD0 maybe add a specific len for each modality
-    opt: Literal["all", "s2", "s1", "sentinel"] = "all",
+    opt: Literal["all", "s2", "s1", "sentinel", "s1s2"] = "all",
     all_transform: None | ModTransform = None,
     seed: int | None = None,
 ) -> ItemTensorMMDC:
@@ -120,7 +121,7 @@ def load_mmdc_sits(
             max_len=max_len.s2,
             seed=temp_seed,
         )
-    if opt in ("s1", "all"):
+    if opt in ("all", "s1s2", "s1"):
         temp_seed = seed + 1 if (seed is not None) else None
         out["s1_asc"] = load_sits(
             c_mmdc_df.s1_asc,
@@ -131,6 +132,9 @@ def load_mmdc_sits(
             max_len=max_len.s1_asc,
             seed=temp_seed,
         )
+    if opt in ("s1", "all"):
+        temp_seed = seed + 1 if (seed is not None) else None
+
         out["s1_desc"] = load_sits(
             c_mmdc_df.s1_desc,
             item=item,
@@ -178,6 +182,7 @@ def load_sits(
     shape_sits = sits_obj.sits.shape
     if transform:  # TODO move that onto the GPU ?
         sits_obj.sits = transform(sits_obj.sits)
+
     row, col = shape_sits[-1], shape_sits[-2]
     x, y = get_crop_idx(rows=row,
                         cols=col,

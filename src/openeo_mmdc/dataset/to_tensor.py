@@ -29,12 +29,15 @@ def light_from_dataset2tensor(
     dataset: xarray.Dataset,
     band_cld: list | None = None,
     load_variable: list | None = None,
+    dtype=torch.int16,
 ):
     time_info = xarray.apply_ufunc(time_delta_netcdf, dataset.coords["t"])
     time = time_info.values.astype(dtype="timedelta64[D]")
+    my_logger.debug(f"TIME {time}")
     time = time.astype("int32")
+
     true_time_doy = time_delta_netcdf_doy(dataset.coords['t'].values)
-    print(true_time_doy)
+
     if load_variable is not None:
         spectral_dataset = dataset[load_variable]
         if band_cld is not None:
@@ -42,24 +45,31 @@ def light_from_dataset2tensor(
     else:
         spectral_dataset = dataset
     sits = spectral_dataset.to_array()
-    sits = torch.Tensor(sits.values).to(torch.int16)
+
+    sits = torch.Tensor(sits.values).to(dtype)
+    mask_nan = np.isnan(sits)
+    mask_nan[sits > 1e9] = True  # with inf value #TODO checked if necessary
+    sits[mask_nan] = 0  # ensure no data are replaced by 0
+
     if band_cld is not None:
-        nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
         cld_mask = torch.Tensor(cld_dataset[["CLM"]].to_array().values)
         mask_sits = MaskMod(
             mask_cld=cld_mask.to(torch.int16),
-            mask_nan=nan_mask,
+            mask_nan=torch.sum(mask_nan, dim=0),
             mask_slc=torch.Tensor(cld_dataset[["SCL"]].to_array().values).to(
                 torch.int16),
         )
         # print(f"mask cld {cld_mask[0,:,0,0]}")
     else:
         my_logger.debug("No cld mask applied")
-        mask_sits = MaskMod()
-    return OneMod(sits,
-                  torch.Tensor(time),
-                  mask=mask_sits,
-                  true_doy=torch.Tensor(true_time_doy).to(torch.float16))
+
+        mask_sits = MaskMod(mask_nan=torch.sum(mask_nan, dim=0))
+    return OneMod(
+        sits,
+        torch.Tensor(time),
+        mask=mask_sits,
+        true_doy=torch.Tensor(true_time_doy).to(torch.float16),
+    )
 
 
 def from_dataset2tensor(
@@ -102,12 +112,13 @@ def from_dataset2tensor(
     sits = sits[:, :, x:x + crop_size, y:y + crop_size]
     sits = torch.Tensor(sits.values)
     my_logger.debug(band_cld)
+    mask_nan = np.isnan(sits)
+    mask_nan[sits > 1e9] = True  # with inf value
+    sits[mask_nan] = 0  # ensure no data are replaced by 0
     if band_cld is not None:
         # nan_mask = torch.isnan(torch.sum(sits, dim=0, keepdim=False))
-
         cld_mask = crop_dataset(cld_dataset[["CLM"]], x, y, crop_size)
         nan_mask = crop_dataset(cld_dataset[["SCL"]], x, y, crop_size) == 0
-
         mask_sits = MaskMod(
             mask_cld=cld_mask,
             mask_nan=nan_mask,
@@ -116,7 +127,7 @@ def from_dataset2tensor(
         # print(f"mask cld {cld_mask[0,:,0,0]}")
     else:
         my_logger.info("No cld mask applied")
-        mask_sits = MaskMod()
+        mask_sits = MaskMod(mask_nan=torch.sum(mask_nan, dim=0))
     if transform is not None:
         my_logger.debug("apply transform")
         sits = transform(sits)
@@ -179,8 +190,7 @@ def time_delta_netcdf(
 
 
 def compute_doy(date: np.datetime64):
-
-    date = np.datetime64(date, 'D')
+    date = np.datetime64(date, "D")
     date = date.astype(datetime)
     date = date.timetuple()
     doy = date.tm_yday
@@ -190,7 +200,7 @@ def compute_doy(date: np.datetime64):
 
 
 def time_delta_netcdf_doy(
-        date: np.datetime64) -> np.array:  #TODO improve parallelization
+    date: np.datetime64, ) -> np.array:  # TODO improve parallelization
     return np.array([compute_doy(one_date)
                      for one_date in date]).astype(np.float16)
 

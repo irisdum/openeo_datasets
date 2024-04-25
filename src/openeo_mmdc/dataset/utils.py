@@ -103,6 +103,7 @@ def load_item_dataset_modality(
     drop_variable: Hashable | Iterable[Hashable] = None,
     load_variables: list = None,
     s2_max_ccp: float | None = None,
+    mask_and_scale=False,
 ) -> Dataset:
     my_logger.debug(f"item{item}")
     item_series = mod_df.iloc[item]
@@ -118,7 +119,7 @@ def load_item_dataset_modality(
     dataset = xarray.open_mfdataset(
         path_im,
         combine="nested",
-        mask_and_scale=False,
+        mask_and_scale=mask_and_scale,
         chunks="auto",
         #        engine="h5netcdf",
     )
@@ -142,7 +143,12 @@ def load_item_dataset_modality(
         ccp = ccp.compute()
         t_sel = ccp.where(ccp < max_pix_cc, drop=True)["t"]
         dataset = dataset.sel(t=t_sel)
-    return dataset.astype("int16")
+        cldb = dataset["SCL"] == 0
+        ccp = cldb.sum(dim=["x", "y"])
+        ccp = ccp.compute()
+        t_sel = ccp.where(ccp < max_pix_cc, drop=True)["t"]
+        dataset = dataset.sel(t=t_sel)
+    return dataset
 
 
 def order_dataset_vars(dataset, list_vars_order=None):

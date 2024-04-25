@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import torch.nn
+import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 
@@ -25,6 +26,16 @@ class MaskMod:
     mask_clp: Tensor | None = None
     padd_mask: Tensor | None = None  # 1 if the date has been padded
 
+    def merge_mask(self) -> Tensor:
+        cld_mask = self.mask_cld == 1
+        # my_logger.debug(f"mask cld in fun {cld_mask[0, :, 0, 0]}")
+        nan_mask = self.mask_slc == 0
+        cld_mask_scl = torch.logical_and(self.mask_slc > 6, self.mask_slc < 11)
+        cld_mask_scl = torch.logical_or(cld_mask_scl, self.mask_slc < 2)
+        cld_mask_scl = torch.logical_or(cld_mask_scl, self.mask_slc == 3)
+        cld_mask = torch.logical_or(cld_mask, cld_mask_scl)
+        return torch.logical_or(cld_mask, nan_mask)
+
 
 @dataclass
 class PaddingMMDC:
@@ -41,20 +52,40 @@ class OneMod:
     mask: MaskMod = MaskMod()
     true_doy: None | Tensor = None
     def apply_padding(self, max_len: int, allow_padd=True):
-        if self.sits is not None:
-            sits = rearrange(self.sits, "c t h w -> t c h w")
-            t = sits.shape[0]
-            sits, doy, padd_index = apply_padding(
-                allow_padd, max_len, t, sits, self.doy
-            )
-            #print(doy.shape)
-            if self.true_doy is not None:
-                raise NotImplementedError
-            if self.mask.mask_cld is not None:
-                raise NotImplementedError
-            return OneMod(sits=sits, doy=doy, mask=MaskMod(padd_mask=padd_index))
+        sits = rearrange(self.sits, "c t h w -> t c h w")
+        t = sits.shape[0]
+        sits, doy, padd_index = apply_padding(
+            allow_padd, max_len, t, sits, self.doy
+        )
+        if self.true_doy is not None:
+            padd_doy = (0, max_len - t)
+            true_doy = F.pad(self.true_doy, padd_doy)
+        if self.mask.mask_cld is not None:
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_cld = F.pad(self.mask.mask_cld, padd_tensor)
         else:
-            return None
+            mask_cld = None
+        if self.mask.mask_nan is not None:
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_nan = F.pad(self.mask.mask_nan, padd_tensor)
+        else:
+            mask_nan = None
+        if self.mask.mask_slc is not None:
+            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+            mask_slc = F.pad(self.mask.mask_slc, padd_tensor)
+        else:
+            mask_slc = None
+        return OneMod(
+            sits=sits,
+            doy=doy,
+            true_doy=true_doy,
+            mask=MaskMod(
+                padd_mask=padd_index,
+                mask_cld=mask_cld,
+                mask_slc=mask_slc,
+                mask_nan=mask_nan,
+            ),
+        )
 
 @dataclass
 class ItemTensorMMDC:
@@ -66,27 +97,23 @@ class ItemTensorMMDC:
 
     def apply_padding(self, paddmmdc: PaddingMMDC):
         if self.s1_asc is not None:
-            s1_asc=s1_asc.apply_padding(paddmmdc.max_len_s1_asc)
+            s1_asc = self.s1_asc.apply_padding(paddmmdc.max_len_s1_asc)
         else:
-            s1_asc=None
+            s1_asc = None
         if self.s1_desc is not None:
-            s1_desc=self.s1_desc.apply_padding(paddmmdc.max_len_s1_desc)
+            s1_desc = self.s1_desc.apply_padding(paddmmdc.max_len_s1_desc)
         else:
-            s1_desc=None
+            s1_desc = None
         if self.s2 is not None:
-             s2=self.s2.apply_padding(paddmmdc.max_len_s2)
+            s2 = self.s2.apply_padding(paddmmdc.max_len_s2)
         else:
-            s2=None
+            s2 = None
         if self.agera5 is not None:
-            agera5=self.agera5.apply_padding(paddmmdc.max_len_agera5)
+            agera5 = self.agera5.apply_padding(paddmmdc.max_len_agera5)
         else:
-            agera5=None
+            agera5 = None
         return ItemTensorMMDC(
-            s2=s2,
-            s1_asc=s1_asc,
-            s1_desc=s1_desc,
-            dem=self.dem,
-            agera5=agera5
+            s2=s2, s1_asc=s1_asc, s1_desc=s1_desc, dem=self.dem, agera5=agera5
         )
 
 
