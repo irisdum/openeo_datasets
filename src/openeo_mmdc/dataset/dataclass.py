@@ -40,7 +40,6 @@ class OneMod:
     doy: Tensor
     mask: MaskMod = MaskMod()
     true_doy: None | Tensor = None
-
     def apply_padding(self, max_len: int, allow_padd=True):
         if self.sits is not None:
             sits = rearrange(self.sits, "c t h w -> t c h w")
@@ -56,7 +55,6 @@ class OneMod:
             return OneMod(sits=sits, doy=doy, mask=MaskMod(padd_mask=padd_index))
         else:
             return None
-
 
 @dataclass
 class ItemTensorMMDC:
