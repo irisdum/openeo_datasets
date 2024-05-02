@@ -13,7 +13,7 @@ from openeo_mmdc.dataset.dataclass import (
     ItemTensorMMDC,
     MaskMod,
     ModTransform,
-    OneMod
+    OneMod,
 )
 from openeo_mmdc.dataset.to_tensor import crop_tensor, get_crop_idx
 

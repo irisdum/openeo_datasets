@@ -116,7 +116,7 @@ def main(config: DictConfig):
     l_out = []
     for job_id in list_id:
         res = c.job(job_id).get_results()
-        #try:
+        # try:
         l_out += dwnd_res(res, ex_dir)
 
         # except openeo.rest.OpenEoApiError:

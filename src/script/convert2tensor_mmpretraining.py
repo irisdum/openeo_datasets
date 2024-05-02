@@ -11,12 +11,9 @@ from script.convert2tensor import save_per_mod
 my_logger = logging.getLogger(__name__)
 
 
-def convert_mm(c_mmdc_df,
-               config,
-               item,
-               mod_df,
-               crop_size=128,
-               seed: int | None = None):
+def convert_mm(
+    c_mmdc_df, config, item, mod_df, crop_size=128, seed: int | None = None
+):
     item_series = c_mmdc_df.s2.iloc[item]
     tile = item_series["s2_tile"]
     patch_id = item_series["patch_id"][:-3]
@@ -84,9 +81,9 @@ def main(config):
         ]
     else:
         mod_df = config.mod_df
-    c_mmdc_df = build_dataset_info(path_dir=directory,
-                                   l_tile_s2=config.s2_tile,
-                                   list_modalities=mod_df)
+    c_mmdc_df = build_dataset_info(
+        path_dir=directory, l_tile_s2=config.s2_tile, list_modalities=mod_df
+    )
     torch.save(
         c_mmdc_df,
         Path(config.ex_dir).joinpath("tiles_descriptions.pt"),

@@ -1,7 +1,7 @@
 export python_version="3.10"
 export name="mmdc_eo"
 conda deactivate
-module purge 
+module purge
 module load anaconda-py3/2019.03
 if ! [ -z "$1" ]
 then

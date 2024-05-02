@@ -1,5 +1,4 @@
 import logging
-from contextlib import suppress
 from pathlib import Path
 
 import hydra
@@ -15,11 +14,9 @@ from openeo_mmdc.dataset.utils import build_dataset_info
 my_logger = logging.getLogger(__name__)
 
 
-def save_per_mod(mods: list,
-                 mmdc_sits,
-                 ex_dir: str | Path,
-                 suffix: str,
-                 crop_size=128):
+def save_per_mod(
+    mods: list, mmdc_sits, ex_dir: str | Path, suffix: str, crop_size=128
+):
     for mod in mods:
         if mod == "s2":
             print(Path(ex_dir).joinpath(f"{suffix}_{mod}.pt"))
@@ -34,7 +31,6 @@ def save_per_mod(mods: list,
         elif "s1_asc" == mod:
             l_tensor = crop_mod(mmdc_sits.s1_asc, crop_size=crop_size)
             for i, tensor in enumerate(l_tensor):
-
                 torch.save(
                     tensor,
                     Path(ex_dir).joinpath(f"{suffix}_id{i}_{mod}.pt"),
@@ -52,7 +48,6 @@ def save_per_mod(mods: list,
             l_tensor = crop_mod(mmdc_sits.dem, crop_size=crop_size)
 
             for i, tensor in enumerate(l_tensor):
-
                 torch.save(
                     tensor,
                     Path(ex_dir).joinpath(f"{suffix}_id{i}_{mod}.pt"),
@@ -62,7 +57,6 @@ def save_per_mod(mods: list,
             l_tensor = crop_mod(mmdc_sits.agera5, crop_size=crop_size)
 
             for i, tensor in enumerate(l_tensor):
-
                 torch.save(
                     tensor,
                     Path(ex_dir).joinpath(f"{suffix}_id{i}_{mod}.pt"),
@@ -96,12 +90,12 @@ def crop_mod(mod: OneMod, crop_size) -> list[OneMod]:
 
 
 def crop_tensor(tensor, crop_size):
-
     if tensor.shape[-1] == crop_size:
         return [tensor]
     assert tensor.shape[-1] % crop_size == 0, (
         f"impossible to crop image size {tensor.shape[-1]} should be devisible"
-        f" by {crop_size}")
+        f" by {crop_size}"
+    )
     assert tensor.shape[-1] == tensor.shape[-2]
     n_crops = tensor.shape[-1] // crop_size
     l_tensor = []
@@ -109,8 +103,8 @@ def crop_tensor(tensor, crop_size):
         l_tensor += [
             tensor[
                 ...,
-                n * crop_size:(n + 1) * crop_size,
-                n * crop_size:(n + 1) * crop_size,
+                n * crop_size : (n + 1) * crop_size,
+                n * crop_size : (n + 1) * crop_size,
             ]
         ]
 
@@ -127,10 +121,9 @@ def convert(c_mmdc_df, config, item, mod_df, crop_size=128):
     if not lfound:
         #        with suppress(BaseException):
         Path(config.ex_dir).joinpath(tile).mkdir(exist_ok=True)
-        out_transform = convert_to_tensor(c_mmdc_df,
-                                          item,
-                                          s2_max_ccp=config.s2_max_ccp,
-                                          opt=config.opt)
+        out_transform = convert_to_tensor(
+            c_mmdc_df, item, s2_max_ccp=config.s2_max_ccp, opt=config.opt
+        )
         if config.opt == "all":
             mod = ["s2", "s1_asc", "s1_desc", "dem", "agera5"]
         elif config.opt == "s1":
@@ -156,12 +149,9 @@ def convert(c_mmdc_df, config, item, mod_df, crop_size=128):
     return item
 
 
-def yearly_convert(c_mmdc_df,
-                   config,
-                   item,
-                   mod_df,
-                   years: list[str],
-                   crop_size=128):
+def yearly_convert(
+    c_mmdc_df, config, item, mod_df, years: list[str], crop_size=128
+):
     item_series = c_mmdc_df.s2.iloc[item]
     tile = item_series["s2_tile"]
     patch_id = item_series["patch_id"][:-3]
@@ -176,7 +166,8 @@ def yearly_convert(c_mmdc_df,
             item,
             list_years=years,
             s2_max_ccp=config.s2_max_ccp,
-            opt="s2s1")
+            opt="s2s1",
+        )
         assert len(l_out_transform) == len(years)
         if config.opt == "all":
             mod = ["s2", "s1_asc", "s1_desc", "dem", "agera5"]
@@ -191,7 +182,6 @@ def yearly_convert(c_mmdc_df,
         else:
             raise NotImplementedError
         for i, year in enumerate(years):
-
             save_per_mod(
                 mods=mod,
                 mmdc_sits=l_out_transform[i],
@@ -229,9 +219,9 @@ def main(config):
         ]
     else:
         mod_df = config.mod_df
-    c_mmdc_df = build_dataset_info(path_dir=directory,
-                                   l_tile_s2=config.s2_tile,
-                                   list_modalities=mod_df)
+    c_mmdc_df = build_dataset_info(
+        path_dir=directory, l_tile_s2=config.s2_tile, list_modalities=mod_df
+    )
     torch.save(
         c_mmdc_df,
         Path(config.ex_dir).joinpath("tiles_descriptions.pt"),
@@ -243,19 +233,19 @@ def main(config):
     res_item = []
     for item in range(len(c_mmdc_df.s2)):
         if config.years is not None:
-            item_out = yearly_convert(c_mmdc_df,
-                                      config,
-                                      item,
-                                      mod_df,
-                                      years=config.years,
-                                      crop_size=config.crop_size)
+            item_out = yearly_convert(
+                c_mmdc_df,
+                config,
+                item,
+                mod_df,
+                years=config.years,
+                crop_size=config.crop_size,
+            )
 
         else:
-            item_out = convert(c_mmdc_df,
-                               config,
-                               item,
-                               mod_df,
-                               crop_size=config.crop_size)
+            item_out = convert(
+                c_mmdc_df, config, item, mod_df, crop_size=config.crop_size
+            )
         res_item.append(item_out)
     # results = dask.compute(*res_item)
     return res_item

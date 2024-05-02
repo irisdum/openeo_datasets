@@ -50,13 +50,17 @@ def main(config):
     max_cc = config.max_cc
     l_ex_path = []
     for index, row in utm_tile_df.iterrows():
-        assert Path(config.path_global_dir, config.s2_tile).exists(),f"{Path(config.path_global_dir, config.s2_tile)} not found "
-        #print(f"{config.path_global_dir}, {config.s2_tile}")
+        assert Path(
+            config.path_global_dir, config.s2_tile
+        ).exists(), (
+            f"{Path(config.path_global_dir, config.s2_tile)} not found "
+        )
+        # print(f"{config.path_global_dir}, {config.s2_tile}")
         gene_path_image = Path(config.path_global_dir, config.s2_tile).glob(
             f"**/openEO_{index}.nc"
         )
         l_path_image = [p for p in gene_path_image]
-        #assert len(l_path_image) == 4 * 11 + 1, print(len(l_path_image))
+        # assert len(l_path_image) == 4 * 11 + 1, print(len(l_path_image))
 
         for path_image in l_path_image:  # TODO maybe parallelize with dask
             ex_path = Path(

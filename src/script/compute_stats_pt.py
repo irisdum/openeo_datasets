@@ -17,8 +17,9 @@ def get_tensor_pix_bands(tensor_path, crop_size):
     my_logger.debug(tensor_path)
     tensor = torch.load(tensor_path)
     my_logger.debug(type(tensor))
-    sub_tensor = rearrange(tensor.sits[..., :crop_size, :crop_size],
-                           "c t h w ->  (t h w) c ")
+    sub_tensor = rearrange(
+        tensor.sits[..., :crop_size, :crop_size], "c t h w ->  (t h w) c "
+    )
     return sub_tensor
 
 
