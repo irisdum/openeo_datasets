@@ -24,14 +24,15 @@ my_logger = logging.getLogger(__name__)
 
 
 def yearly_convert_to_tensor(
-        c_mmdc_df: MMDCDF,
-        item,
-        list_years: list["str"],
-        s2_drop_variable: list["str"] | None = None,
-        s2_load_bands: list[str] | None = None,
-        opt: Literal["all", "s2", "s1", "sentinel"] = "all",
-        s2_band_mask: list | None = None,
-        s2_max_ccp: float | None = None) -> list[ItemTensorMMDC]:
+    c_mmdc_df: MMDCDF,
+    item,
+    list_years: list["str"],
+    s2_drop_variable: list["str"] | None = None,
+    s2_load_bands: list[str] | None = None,
+    opt: Literal["all", "s2", "s1", "sentinel"] = "all",
+    s2_band_mask: list | None = None,
+    s2_max_ccp: float | None = None,
+) -> list[ItemTensorMMDC]:
     """
 
     Args:
@@ -74,16 +75,16 @@ def yearly_convert_to_tensor(
     s2_datasets = slice_year_dataset(s2_dataset, list_years)
     s1_datasets = slice_year_dataset(s1_asc_dataset, list_years)
     for j, year in enumerate(list_years):
-
-        item = ItemTensorMMDC(s2=light_from_dataset2tensor(
-            s2_datasets[j],
-            band_cld=s2_band_mask,
-            load_variable=s2_load_bands,
-        ),
-                              s1_asc=light_from_dataset2tensor(
-                                  s1_datasets[j],
-                                  load_variable=S1_BAND,
-                                  dtype=torch.float32))
+        item = ItemTensorMMDC(
+            s2=light_from_dataset2tensor(
+                s2_datasets[j],
+                band_cld=s2_band_mask,
+                load_variable=s2_load_bands,
+            ),
+            s1_asc=light_from_dataset2tensor(
+                s1_datasets[j], load_variable=S1_BAND, dtype=torch.float32
+            ),
+        )
         l_out += [item]
 
     return l_out
@@ -132,25 +133,30 @@ def convert_to_tensor(
         )
 
     if opt in ("all", "s1"):
-        s1_des_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.s1_desc,
-                                                    item=item)
-        out["s1_desc"] = light_from_dataset2tensor(s1_des_dataset,
-                                                   load_variable=S1_BAND,
-                                                   dtype=torch.float32)
+        s1_des_dataset = load_item_dataset_modality(
+            mod_df=c_mmdc_df.s1_desc, item=item
+        )
+        out["s1_desc"] = light_from_dataset2tensor(
+            s1_des_dataset, load_variable=S1_BAND, dtype=torch.float32
+        )
     if opt in ("all", "s1s2", "s1"):
         s1_asc_dataset = load_item_dataset_modality(
             mod_df=c_mmdc_df.s1_asc, item=item
         )  # TODO maybe use drop_var depends if we want to keep the angle ...
-        out["s1_asc"] = light_from_dataset2tensor(s1_asc_dataset,
-                                                  load_variable=S1_BAND,
-                                                  dtype=torch.float32)
+        out["s1_asc"] = light_from_dataset2tensor(
+            s1_asc_dataset, load_variable=S1_BAND, dtype=torch.float32
+        )
 
     if opt == "all":
-        dem_dataset = load_item_dataset_modality(mod_df=c_mmdc_df.dem,
-                                                 item=item,
-                                                 s2_max_ccp=None,
-                                                 dtype=torch.float32)
-        out["dem"] = light_from_dataset2tensor(dem_dataset, )
+        dem_dataset = load_item_dataset_modality(
+            mod_df=c_mmdc_df.dem,
+            item=item,
+            s2_max_ccp=None,
+            dtype=torch.float32,
+        )
+        out["dem"] = light_from_dataset2tensor(
+            dem_dataset,
+        )
         l_agera5_df = [
             c_mmdc_df.dew_temp,
             c_mmdc_df.temp_max,
@@ -162,17 +168,18 @@ def convert_to_tensor(
             c_mmdc_df.val_press,
         ]
         agera5dataset = merge_agera5_datasets(l_agera5_df, item)
-        out["agera5"] = light_from_dataset2tensor(agera5dataset,
-                                                  dtype=torch.float32)
+        out["agera5"] = light_from_dataset2tensor(
+            agera5dataset, dtype=torch.float32
+        )
     return ItemTensorMMDC(**out)
 
 
-def slice_year_dataset(ds: xarray.Dataset,
-                       list_years: list[str]) -> list[xarray.Dataset]:
+def slice_year_dataset(
+    ds: xarray.Dataset, list_years: list[str]
+) -> list[xarray.Dataset]:
     l_ds = []
 
     for year in list_years:
-
         sub_ds = ds.sel(t=slice(f"{year}-01-01", f"{year}-12-31"))
         assert len(sub_ds.t) > 0, "No sliced found at {year}"
         my_logger.debug(f"DOY year {sub_ds.t} at year {year}")
@@ -206,11 +213,13 @@ def convert_rd_time_crop_mm_sits(
     # Convert the DatetimeIndex to an xarray DataArray
     times = xr.DataArray(dates, dims="time")
     end_max_time = np.datetime64(END_TIME_SITS, "D") - np.timedelta64(
-        n_months * 30, "D")
+        n_months * 30, "D"
+    )
     beg_time_min = np.datetime64(BEG_TIME_SITS, "D")
     np.random.seed(seed + 1)
-    rd_start_date = np.random.choice(times[(times >= beg_time_min)
-                                           & (times <= end_max_time)])
+    rd_start_date = np.random.choice(
+        times[(times >= beg_time_min) & (times <= end_max_time)]
+    )
     end_date = rd_start_date + np.timedelta64(n_months * 30, "D")
     if opt in ("all", "s2", "s1s2"):
         s2_dataset = load_item_dataset_modality(
@@ -232,13 +241,14 @@ def convert_rd_time_crop_mm_sits(
             mod_df=c_mmdc_df.s1_asc,
             item=item,
             mask_and_scale=True,
-            load_variables=["VV", "VH"],
+            load_variables=S1_BAND,
         )  # TODO maybe use drop_var depends if we want to keep the angle ...
         time_cropped_s1_asc = s1_asc_dataset.sel(
-            t=slice(rd_start_date, end_date))
-        out["s1_asc"] = light_from_dataset2tensor(time_cropped_s1_asc,
-                                                  load_variable=S1_BAND,
-                                                  dtype=torch.float32)
+            t=slice(rd_start_date, end_date)
+        )
+        out["s1_asc"] = light_from_dataset2tensor(
+            time_cropped_s1_asc, load_variable=S1_BAND, dtype=torch.float32
+        )
 
     # TODO implement for other modalities
     return ItemTensorMMDC(**out)

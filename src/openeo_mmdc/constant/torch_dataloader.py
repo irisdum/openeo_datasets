@@ -49,7 +49,7 @@ S2_BAND = [
 CLD_MASK = "CLM"
 CLD_MASK_BAND = ["CLM", "SCL"]
 LOAD_VARIABLE = S2_BAND + [CLD_MASK]
-S1_BAND = ["VH", "VV"]
+S1_BAND = ["VH", "VV", "local_incidence_angle"]
 AGERA_BAND = [
     "dewpoint-temperature",
     "precipitation-flux",
