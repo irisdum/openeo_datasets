@@ -60,19 +60,31 @@ class OneMod:
         if self.true_doy is not None:
             padd_doy = (0, max_len - t)
             true_doy = F.pad(self.true_doy, padd_doy)
+        else:
+            true_doy=self.true_doy
         if self.mask.mask_cld is not None:
-            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
-            mask_cld = F.pad(self.mask.mask_cld, padd_tensor)
+            if len(self.mask.mask_cld.shape)==4:
+                mask_cld=rearrange(self.mask.mask_cld,'c t h w -> t c h w')
+                padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+                mask_cld = F.pad(mask_cld, padd_tensor)
+            else:
+                raise NotImplementedError
         else:
             mask_cld = None
         if self.mask.mask_nan is not None:
-            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
-            mask_nan = F.pad(self.mask.mask_nan, padd_tensor)
+            if len(self.mask.mask_nan.shape)==4:
+                mask_nan=rearrange(self.mask.mask_nan,'c t h w -> t c h w')
+                padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+                mask_nan = F.pad(mask_nan, padd_tensor)
+            else:
+                raise NotImplementedError
         else:
             mask_nan = None
         if self.mask.mask_slc is not None:
-            padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
-            mask_slc = F.pad(self.mask.mask_slc, padd_tensor)
+            if len(self.mask.mask_slc.shape)==4:
+                mask_slc=rearrange(self.mask.mask_slc,'c t h w -> t c h w')
+                padd_tensor = (0, 0, 0, 0, 0, 0, 0, max_len - t)
+                mask_slc = F.pad(mask_slc, padd_tensor)
         else:
             mask_slc = None
         return OneMod(
