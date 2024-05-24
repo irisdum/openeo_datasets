@@ -70,3 +70,6 @@ For each modalities is stored :
 - The acquisition date as the difference in days with the reference_date
 - (Optional) Acquisition mask
 It is also possible to precise for s2 data the maximum cloud cover allowed in the patch.
+`python convert2tensor.py`
+## Particular case
+Create a multimodal pre-training set. Used to train multimodal ALISE
