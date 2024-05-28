@@ -108,7 +108,7 @@ def load_mmdc_sits(
     out = {}
     if all_transform is None:
         all_transform = ModTransform()
-    if opt in ("all", "s2"):
+    if opt in ("all", "s2", "s1s2"):
         temp_seed = seed + 0 if (seed is not None) else None
 
         out["s2"] = load_sits(
@@ -131,6 +131,7 @@ def load_mmdc_sits(
             max_len=max_len.s1_asc,
             seed=temp_seed,
         )
+
     if opt in ("s1", "all"):
         temp_seed = seed + 1 if (seed is not None) else None
 
@@ -203,14 +204,14 @@ def load_sits(
         temp_idx = None
 
     crop_sits = crop_spat_temp(sits_obj.sits, x, y, crop_size, temp_idx)
-    my_logger.debug(sits_obj.mask.mask_cld.shape)
-    my_logger.debug(sits_obj.mask.mask_nan[None, ...].shape)
-
-    crop_mask_cld = crop_spat_temp(sits_obj.mask.mask_cld, x, y, crop_size,
-                                   temp_idx)
-    crop_mask_scl = crop_spat_temp(sits_obj.mask.mask_slc, x, y, crop_size,
-                                   temp_idx)
-
+    if sits_obj.mask.mask_cld is not None:
+        crop_mask_cld = crop_spat_temp(sits_obj.mask.mask_cld, x, y, crop_size,
+                                       temp_idx)
+        crop_mask_scl = crop_spat_temp(sits_obj.mask.mask_slc, x, y, crop_size,
+                                       temp_idx)
+    else:
+        crop_mask_cld = None
+        crop_mask_scl = None
     crop_nan_mask = crop_spat_temp(sits_obj.mask.mask_nan[None, ...], x, y,
                                    crop_size, temp_idx)
     # padd_mask=crop_spat_temp(torch.ones(shape_sits),x,y,crop_size,temp_idx)
