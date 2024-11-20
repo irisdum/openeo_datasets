@@ -1,8 +1,9 @@
-s2_tiles: [30TXT,31TEN, 31TDL,32UQD,33TYJ,33UXR,34TFR]
-path_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/PT_FORMAT_2/train
-mod: s2
-crop_size: 64
+s2_tiles: [30TXT,31TDL,31TEN,32TPQ,32TPT,32UMB,32UQD,33TVM,33TYJ,33UXR,34UEC]
+path_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/PT_FORMAT_MM3/train
+mod: s1_asc
+crop_size: 8
 qmin: 0.05
-max_img: 2
+max_img: 100
 qmax: 0.95
-ex_dir: /home/ad/dumeuri/DeepChange/MMDC_OE
+ex_dir: /home/ad/dumeuri/DeepChange/MMDC_OE/PT_FORMAT_MM3
+bands: ["VV","VH","ratio"]
