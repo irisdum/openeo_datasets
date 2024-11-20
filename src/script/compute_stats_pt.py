@@ -41,20 +41,21 @@ def main(config):
     all_tensors = torch.cat(l_computed, dim=0)
     if config.mod == "s1_asc":
         ratio = all_tensors[..., [0]] / all_tensors[..., [1]]
-        all_tensors = torch.cat([all_tensors, ratio], dim=1)
+        all_tensors = torch.cat([all_tensors[:, [0, 1]], ratio], dim=1)
         all_tensors = torch.log(all_tensors)
-
-    med = torch.median(all_tensors, dim=0).values
+        #print(all_tensors.shape)
+        #print(torch.quantile(all_tensors.float(),0.05,dim=0))
+    med = torch.nanmedian(all_tensors, dim=0).values
     my_logger.debug(f"{med}")
     s_med = pd.Series(
         dict(zip(config.bands, [float(med_val) for med_val in med])))
     s_med.name = "med"
-    qmin = torch.quantile(all_tensors.float(), q=config.qmin, dim=0)
+    qmin = torch.nanquantile(all_tensors.float(), q=config.qmin, dim=0)
     my_logger.debug(f"{qmin}")
     s_qmin = pd.Series(
         dict(zip(config.bands, [float(q_val) for q_val in qmin])))
     s_qmin.name = "qmin"
-    qmax = torch.quantile(all_tensors.float(), q=config.qmax, dim=0)
+    qmax = torch.nanquantile(all_tensors.float(), q=config.qmax, dim=0)
     s_qmax = pd.Series(
         dict(zip(config.bands, [float(q_val) for q_val in qmax])))
     s_qmax.name = "qmax"
