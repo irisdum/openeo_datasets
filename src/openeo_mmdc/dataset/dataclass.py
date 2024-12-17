@@ -55,9 +55,11 @@ class OneMod:
     def apply_padding(self, max_len: int, allow_padd=True):
         sits = rearrange(self.sits, "c t h w -> t c h w")
         t = sits.shape[0]
+        my_logger.debug(f"padding {t}")
         sits, doy, padd_index = apply_padding(
             allow_padd, max_len, t, sits, self.doy
         )
+        my_logger.debug(f" t {t} \n padd_index {padd_index}")
         if self.true_doy is not None:
             padd_doy = (0, max_len - t)
             true_doy = F.pad(self.true_doy, padd_doy)

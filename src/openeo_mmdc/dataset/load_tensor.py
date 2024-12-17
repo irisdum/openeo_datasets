@@ -59,7 +59,8 @@ def create_mod_df_tensor(
         assert l_s2, f"No image found at {pattern} at {path_dir}"
     my_logger.debug(l_df)
     final_df = pd.concat(l_df, ignore_index=True)
-    final_df = final_df.sort_values(["patch_id", "s2_tile"], ascending=True)
+    #final_df = final_df.sort_values(["patch_id", "s2_tile"], ascending=True)
+    final_df = final_df.sort_values("sits_path", ascending=True)
     return final_df
 
 

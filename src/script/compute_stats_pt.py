@@ -43,9 +43,9 @@ def main(config):
         ratio = all_tensors[..., [0]] / all_tensors[..., [1]]
         all_tensors = torch.cat([all_tensors[:, [0, 1]], ratio], dim=1)
         all_tensors = torch.log(all_tensors)
-        #print(all_tensors.shape)
-        #print(torch.quantile(all_tensors.float(),0.05,dim=0))
+
     med = torch.nanmedian(all_tensors, dim=0).values
+
     my_logger.debug(f"{med}")
     s_med = pd.Series(
         dict(zip(config.bands, [float(med_val) for med_val in med])))
